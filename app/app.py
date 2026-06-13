@@ -1,10 +1,11 @@
 """Demo dashboard — FastAPI, single page, 5 inverters.
 
-Run:  uvicorn app:app --port 8080   (from demo/)
+Run:  uvicorn app.app:app --port 8080   (from repo root)
 Approve/reject is audit-logged to out/audit.jsonl. Advisory only — no write-back.
 """
 
 import json
+import sys
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -14,8 +15,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
-HERE = Path(__file__).parent
-OUT = HERE / "out"
+HERE = Path(__file__).parent          # app/
+ROOT = HERE.parent                    # repo root (agents/, out/)
+DATA = ROOT.parent                    # dataset dir (raw_data/, "2. Additional Data/")
+sys.path.insert(0, str(ROOT))         # so `from agents import ...` resolves
+OUT = ROOT / "out"
 CHRONOS_URL = "https://3juzm47gye.execute-api.eu-north-1.amazonaws.com/"
 INVS = [f"INV 01.01.00{i}" for i in range(1, 6)]
 
@@ -24,7 +28,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"],
                    allow_headers=["*"])
 
 # hourly P_AC per inverter for the live forecast panel (3 clear July days)
-_df = pd.read_csv(HERE.parent / "raw_data/inverters_first5_2023.csv",
+_df = pd.read_csv(DATA / "raw_data/inverters_first5_2023.csv",
                   sep=";", decimal=",", parse_dates=["timestamp"],
                   date_format="%Y.%m.%d %H:%M")
 _df = _df.groupby("timestamp").mean(numeric_only=True)
@@ -57,7 +61,7 @@ def incidents(inv: str | None = None):
 @app.get("/api/tickets")
 def tickets():
     """Real Enerparc service tickets from Tickets.xlsx, filtered to first 5 inverters + Plant."""
-    df = pd.ExcelFile(HERE.parent / "2. Additional Data/Tickets.xlsx").parse("2020-2026")
+    df = pd.ExcelFile(DATA / "2. Additional Data/Tickets.xlsx").parse("2020-2026")
     df["startdate"] = pd.to_datetime(df["startdate"], utc=True, errors="coerce").dt.tz_localize(None)
     df["enddate"]   = pd.to_datetime(df["enddate"],   utc=True, errors="coerce").dt.tz_localize(None)
     keep = INVS + ["Plant"]

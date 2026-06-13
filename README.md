@@ -95,8 +95,8 @@ python pipelines/pipeline.py          # 5-inverter run → out/incidents.json, t
 python pipelines/pipeline_2018.py     # 2018 validation → out/pr_validation.json (the PR chart)
 python pipelines/pipeline_fault_test.py   # synthetic fault-injection eval
 
-# 2) serve
-uvicorn app:app --port 8080
+# 2) serve (from repo root)
+uvicorn app.app:app --port 8080
 ```
 
 Open **http://127.0.0.1:8080/draft** — the primary dashboard (Overview · Agents · Compliance Chat · Tickets · Approval Queue).
@@ -112,8 +112,7 @@ Open **http://127.0.0.1:8080/draft** — the primary dashboard (Overview · Agen
 ## Repo layout
 
 ```
-app.py                  FastAPI server + dashboard routes
-dashboard.html          primary UI (Enerparc Pulse)
+app/                    FastAPI server (app.py) + primary UI (dashboard.html)
 agents/                 the 8 agents above
 pipelines/              data pipelines (main / 2018 validation / fault test / synthetic)
 eval/                   scoring (eval.py), PR chart gen, point-by-point fault-test runner
