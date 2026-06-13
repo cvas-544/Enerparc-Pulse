@@ -1,0 +1,2180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enerparc Pulse — O&M Command Crew</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ── design tokens ─────────────────────────────────────────── */
+:root {
+  --bg:#191919; --surface:#1E1E1E; --surface2:#242424;
+  --border:#303030; --text:#FFFAEE;
+  --accent:#FE5102; --success:#07CB9C; --error:#FF3737;
+  --vanilla:#FFFAEE; --charcoal:#191919;
+  --dim:#A3A3A3; --dim2:#606060;
+  --fill-0:#FFFAEE; --stroke-0:#FFFAEE;
+  --sidebar-w:228px;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--text); font:15px/1.6 'Inter',sans-serif;
+       display:flex; height:100vh; overflow:hidden; }
+
+/* ── grain ──────────────────────────────────────────────────── */
+#grain { position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:9999; opacity:.06;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px; }
+
+/* ── sidebar ─────────────────────────────────────────────────── */
+.sidebar {
+  width:var(--sidebar-w); flex-shrink:0; height:100vh;
+  background:var(--surface); border-right:1px solid var(--border);
+  display:flex; flex-direction:column; overflow:hidden;
+  position:relative; z-index:10;
+}
+.sidebar-logo {
+  padding:24px 20px 20px;
+  border-bottom:1px solid var(--border);
+}
+.sidebar-logo .wordmark {
+  font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700;
+  letter-spacing:-.4px; display:flex; align-items:center; gap:10px;
+}
+.sidebar-logo .wordmark em { color:var(--accent); font-style:normal; }
+.sidebar-logo .sub {
+  font-family:'Space Mono',monospace; font-size:9px; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--dim2); margin-top:4px;
+}
+.nav-body { flex:1; overflow-y:auto; padding:16px 12px; display:flex; flex-direction:column; gap:4px; }
+.nav-section { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:1.5px;
+               text-transform:uppercase; color:var(--dim2); padding:12px 8px 6px; }
+.nav-item {
+  display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:12px;
+  cursor:pointer; color:var(--dim); font-size:14px; font-weight:500;
+  transition:background .15s, color .15s; user-select:none; border:0;
+  background:transparent; width:100%; text-align:left;
+}
+.nav-item svg { width:16px; height:16px; flex-shrink:0; opacity:.6; transition:opacity .15s; }
+.nav-item:hover { background:var(--surface2); color:var(--text); }
+.nav-item:hover svg { opacity:1; }
+.nav-item.active { background:#FE510214; color:var(--accent); }
+.nav-item.active svg { opacity:1; fill:var(--accent); stroke:var(--accent); }
+.nav-badge { margin-left:auto; background:#FE510222; color:var(--accent);
+             font-family:'Space Mono',monospace; font-size:9px; letter-spacing:1px;
+             border-radius:999px; padding:2px 8px; }
+.sidebar-footer {
+  padding:16px 12px; border-top:1px solid var(--border);
+}
+.inv-selector {
+  background:var(--surface2); border:1px solid var(--border); border-radius:12px;
+  padding:10px 12px; width:100%;
+}
+.inv-selector label { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:1.5px;
+                      text-transform:uppercase; color:var(--dim2); display:block; margin-bottom:6px; }
+.inv-selector select {
+  background:transparent; border:0; outline:none; color:var(--text);
+  font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1px;
+  text-transform:uppercase; width:100%; cursor:pointer;
+}
+.inv-selector select option { background:var(--surface); }
+.inv-meta { font-size:11px; color:var(--dim2); margin-top:4px; }
+
+/* ── main content ────────────────────────────────────────────── */
+.main { flex:1; height:100vh; overflow-y:auto; display:flex; flex-direction:column; }
+.topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:24px 32px 20px; border-bottom:1px solid var(--border);
+  position:sticky; top:0; background:var(--bg); z-index:5; flex-shrink:0;
+}
+.topbar h1 { font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700;
+             letter-spacing:-.5px; }
+.topbar h1 em { color:var(--accent); font-style:normal; }
+.topbar-right { display:flex; align-items:center; gap:12px; }
+.chip { background:var(--surface); border:1px solid var(--border); border-radius:999px;
+        padding:5px 14px; font-family:'Space Mono',monospace; font-size:10px;
+        letter-spacing:1.5px; text-transform:uppercase; color:var(--dim); }
+.chip.live { color:var(--success); border-color:#07CB9C44; }
+
+.page { display:none; padding:28px 32px 48px; flex:1; }
+.page.active { display:block; }
+
+/* ── shared card components ──────────────────────────────────── */
+.mono { font-family:'Space Mono',monospace; font-size:10.5px; letter-spacing:1.5px;
+        text-transform:uppercase; }
+h2,h3 { font-family:'Space Grotesk',sans-serif; }
+
+/* metric cards (vanilla) */
+.grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+@media(max-width:1100px){ .grid4{grid-template-columns:repeat(2,1fr)} }
+
+.metric { background:var(--vanilla); color:var(--charcoal); border-radius:20px;
+          padding:22px; display:flex; flex-direction:column; min-height:280px;
+          border:1px solid transparent; transition:border-color .15s; }
+.metric .head { display:flex; justify-content:space-between; align-items:baseline;
+                color:#5A5A5A; font-size:13px; }
+.metric .head svg { width:13px; height:13px; }
+.metric .big { font-family:'Space Grotesk',sans-serif; font-size:48px; font-weight:500;
+               letter-spacing:-2px; line-height:1.15; margin:6px 0 12px; }
+.metric .big small { font-size:18px; letter-spacing:0; color:#888; font-weight:400; }
+.legend { list-style:none; }
+.legend li { display:flex; align-items:center; gap:8px; padding:6px 0;
+             border-bottom:1px solid #19191912; font-size:13px; }
+.legend li:last-child { border-bottom:0; }
+.legend .dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.legend .val { margin-left:auto; font-weight:600; }
+.dot-o { background:var(--accent); } .dot-k { background:var(--charcoal); } .dot-g { background:#C7C7C7; }
+
+.bars { display:flex; align-items:flex-end; gap:4px; margin-top:auto; height:80px; }
+.bars .m { flex:1; display:flex; flex-direction:column; align-items:center; height:100%; }
+.bars .up { width:5px; border-radius:3px; background:var(--accent); margin-top:auto; }
+.bars .dn { width:5px; border-radius:3px; background:var(--charcoal); margin-bottom:auto; }
+.bars.split .m { justify-content:center; }
+.bars.split .up { margin:0 0 2px; } .bars.split .dn { margin:2px 0 0; }
+.axis { display:flex; justify-content:space-between; color:#A3A3A3; font-size:11px; margin-top:6px; }
+.gaugewrap { margin:auto 0; text-align:center; }
+.gauge { width:140px; height:78px; }
+.gauge .track { stroke:#19191918; } .gauge .arc { stroke:var(--accent); }
+.gauge text { font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:500; fill:var(--charcoal); }
+
+/* agent cards (dark) */
+.agent { background:var(--surface); border:1px solid var(--border); border-radius:20px;
+         padding:22px; transition:border-color .2s; cursor:default; }
+.agent:hover { border-color:#FE510244; }
+.agent:hover .illus svg [fill*="fill-0"] { fill:var(--accent); }
+.illus { width:44px; height:44px; display:block; overflow:hidden; margin-bottom:16px; }
+.illus svg { width:44px !important; height:44px !important; display:block; }
+.agent h3 { font-size:15px; letter-spacing:-.4px; font-weight:600; margin-bottom:5px; }
+.agent p { font-size:13px; color:var(--dim); margin-bottom:12px; min-height:52px; }
+.status-badge { display:inline-block; border-radius:999px; padding:3px 11px;
+                font-family:'Space Mono',monospace; font-size:9.5px; letter-spacing:1px;
+                text-transform:uppercase; }
+.s-live { color:var(--success); border:1px solid #07CB9C44; }
+.s-warn { color:var(--accent); border:1px solid #FE510244; }
+
+/* panel (dark) */
+.panel { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:22px; }
+.panel h2 { font-size:16px; letter-spacing:-.4px; margin-bottom:16px; font-weight:600; }
+.panel-sub { color:var(--dim2); font-size:12px; font-family:'Space Mono',monospace;
+             letter-spacing:1px; text-transform:uppercase; }
+
+/* queue filter chips */
+.q-filter {
+  font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.5px;
+  padding:6px 14px; border-radius:999px; border:1px solid var(--border);
+  background:transparent; color:var(--dim2); cursor:pointer; transition:all .15s;
+}
+.q-filter:hover { border-color:var(--accent); color:var(--text); }
+.q-filter.active { background:var(--accent); border-color:var(--accent); color:var(--vanilla); }
+
+/* approval queue cards — SolarPower Europe O&M v6.0 expanded format */
+.q { border:1px solid var(--border); border-radius:14px; margin-bottom:14px;
+     overflow:hidden; transition:border-color .15s; }
+.q:hover { border-color:#FE510244; }
+.badge { border-radius:999px; padding:3px 10px; font-family:'Space Mono',monospace;
+         font-size:9.5px; letter-spacing:1px; text-transform:uppercase; }
+.b-fault { color:var(--error); border:1px solid #FF373744; }
+.b-curt  { color:var(--vanilla); border:1px solid var(--border); }
+.b-grid  { color:var(--accent); border:1px solid #FE510244; }
+.b-weather { color:var(--dim); border:1px solid var(--border); }
+.eur { font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--accent); font-size:16px; }
+/* card sections */
+.qc-header { display:flex; justify-content:space-between; align-items:flex-start;
+             padding:14px 16px 10px; border-bottom:1px solid var(--border); gap:12px; }
+.qc-header-left { display:flex; flex-direction:column; gap:6px; }
+.qc-tid { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:1.5px;
+          color:var(--dim2); text-transform:uppercase; margin-top:2px; }
+.qc-meta { font-family:'Space Mono',monospace; font-size:10px; color:var(--dim2);
+           padding:7px 16px; border-bottom:1px solid var(--border); line-height:1.6; }
+.qc-section { padding:10px 16px; border-bottom:1px solid var(--border); }
+.qc-section:last-of-type { border-bottom:0; }
+.qc-sl { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:1.5px;
+         text-transform:uppercase; color:var(--dim2); margin-bottom:9px; }
+.qc-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px 20px; }
+.qc-grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px 16px; }
+.qc-label { font-size:9.5px; color:var(--dim2); text-transform:uppercase;
+            font-family:'Space Mono',monospace; letter-spacing:.5px; margin-bottom:2px; }
+.qc-value { font-size:13px; color:var(--text); }
+.qc-subject { font-size:13px; font-weight:600; color:var(--vanilla);
+              margin-bottom:6px; margin-top:9px; }
+.qc-desc { font-size:12px; color:var(--dim); line-height:1.6; margin-top:2px; }
+.prio-critical { color:#ef4444; font-weight:700; font-size:12px; }
+.prio-high    { color:#FE5102; font-weight:600; font-size:12px; }
+.prio-medium  { color:#f59e0b; font-size:12px; }
+.prio-low     { color:var(--dim); font-size:12px; }
+.route-line { font-size:12px; padding:6px 10px; border-radius:8px;
+              background:#FFFFFF08; margin-bottom:8px; }
+.compliance-line { font-size:11.5px; color:var(--dim2); border-left:2px solid #FE510233;
+                   padding-left:8px; margin:6px 0 4px; line-height:1.55; }
+.qc-similar-item { font-family:'Space Mono',monospace; font-size:10.5px; color:var(--dim2);
+                   padding:2px 0; }
+.qc-actions { padding:12px 16px; display:flex; align-items:center; gap:8px;
+              background:#FFFFFF03; }
+.btn { font:600 13px 'Inter',sans-serif; border-radius:999px; padding:7px 20px; cursor:pointer;
+       transition:background .15s; }
+.approve { background:var(--accent); color:var(--vanilla); border:0; }
+.approve:hover { background:#E64400; }
+.reject { background:transparent; color:var(--dim); border:1px solid var(--border); }
+.reject:hover { border-color:var(--error); color:var(--error); }
+/* master-detail queue layout */
+.queue-split { display:flex; gap:14px; height:calc(100vh - 220px); min-height:400px; }
+.queue-list  { width:320px; flex-shrink:0; overflow-y:auto; }
+.queue-detail-panel { flex:1; overflow-y:auto; border:1px solid var(--border); border-radius:14px;
+                      background:var(--card); }
+.queue-detail-empty { display:flex; flex-direction:column; align-items:center; justify-content:center;
+                      height:100%; padding:40px; text-align:center; }
+/* compact list row */
+.qi { display:flex; align-items:center; gap:10px; padding:11px 13px;
+      border:1px solid var(--border); border-radius:10px; margin-bottom:6px;
+      cursor:pointer; transition:border-color .15s, background .15s; }
+.qi:hover { border-color:#FE510266; background:#FFFFFF05; }
+.qi.qi-active { border-color:var(--accent); background:#FE510211; }
+.qi.qi-done { opacity:.45; }
+.qi-left  { flex:1; min-width:0; }
+.qi-right { text-align:right; flex-shrink:0; }
+.qi-subtype { font-family:'Space Mono',monospace; font-size:10px; letter-spacing:.5px;
+              color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.qi-meta { font-size:10.5px; color:var(--dim2); margin-top:2px;
+           white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.qi-eur { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; color:var(--accent); }
+.qi-prio { font-size:9px; font-family:'Space Mono',monospace; letter-spacing:.5px; margin-top:2px; }
+
+/* forecast spark */
+.spark { display:flex; align-items:flex-end; gap:3px; height:110px; margin:14px 0 6px; }
+.spark i { flex:1; background:#FE510222; border-top:2px solid var(--accent);
+           border-radius:2px 2px 0 0; transition:height .3s; }
+.spark i.h { background:#38383855; border-top:2px solid var(--dim2); }
+
+/* data tables (tickets, approval queue) */
+.data-table { width:100%; border-collapse:collapse; font-size:13px; }
+.data-table th { font-family:'Space Mono',monospace; font-size:9.5px; letter-spacing:1px;
+                 text-transform:uppercase; color:var(--dim2); padding:8px 12px;
+                 border-bottom:1px solid var(--border); text-align:left; font-weight:400; }
+.data-table td { padding:10px 12px; border-bottom:1px solid var(--border); color:var(--dim); }
+.data-table td:first-child { color:var(--text); }
+.data-table tr:last-child td { border-bottom:0; }
+.data-table tr:hover td { background:#FFFFFF04; }
+.sub-pill { display:inline-block; border-radius:6px; padding:2px 8px; font-size:11px;
+            background:#FFFFFF08; color:var(--dim); }
+
+/* chat */
+.chat-wrap { display:flex; flex-direction:column; height:calc(100vh - 160px); }
+.chat-messages { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:14px;
+                 padding:4px 0 20px; }
+.chat-msg { max-width:72%; }
+.chat-msg.user { align-self:flex-end; }
+.chat-msg.bot  { align-self:flex-start; }
+.chat-bubble { border-radius:18px; padding:12px 16px; font-size:14px; line-height:1.6; }
+.chat-msg.user .chat-bubble { background:var(--accent); color:var(--vanilla);
+                               border-radius:18px 18px 4px 18px; }
+.chat-msg.bot  .chat-bubble { background:var(--surface); border:1px solid var(--border);
+                               color:var(--text); border-radius:18px 18px 18px 4px; }
+.chat-sender { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:1px;
+               text-transform:uppercase; color:var(--dim2); margin-bottom:5px; padding:0 4px; }
+.chat-input-row { display:flex; gap:10px; padding-top:16px; border-top:1px solid var(--border); }
+.chat-input { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:14px;
+              padding:12px 16px; color:var(--text); font:14px 'Inter',sans-serif; outline:none;
+              resize:none; }
+.chat-input:focus { border-color:#FE510255; }
+.chat-send { background:var(--accent); color:var(--vanilla); border:0; border-radius:12px;
+             padding:0 20px; cursor:pointer; font-weight:600; font-size:13px; }
+.chat-send:hover { background:#E64400; }
+
+/* section header */
+.sec-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:18px; }
+.sec-head h2 { font-size:18px; letter-spacing:-.5px; font-weight:700; }
+.sec-head .count { font-family:'Space Mono',monospace; font-size:10px; letter-spacing:1px;
+                   color:var(--dim2); text-transform:uppercase; }
+.mt20 { margin-top:20px; }
+.mt14 { margin-top:14px; }
+
+/* ── fleet health strip ────────────────────────────────────── */
+.health-strip {
+  display:flex; align-items:stretch; gap:0;
+  background:var(--surface); border:1px solid var(--border); border-radius:20px;
+  margin-bottom:24px; cursor:pointer; overflow:hidden;
+  transition:border-color .15s;
+}
+.health-strip:hover { border-color:#FE510255; }
+.health-card {
+  display:flex; align-items:center; gap:16px;
+  padding:20px 28px;
+}
+.health-divider {
+  width:1px; background:var(--border); flex-shrink:0;
+  margin:16px 0;
+}
+.hc-icon {
+  width:44px; height:44px; border-radius:12px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.hc-icon svg { width:22px; height:22px; }
+.hc-green  { background:#4ade8022; color:#4ade80; }
+.hc-orange { background:#FE510222; color:#FE5102; }
+.hc-red    { background:#ef444422; color:#ef4444; }
+.hc-body { display:flex; flex-direction:column; gap:4px; }
+.hc-label {
+  font-family:'Space Mono',monospace; font-size:10px; letter-spacing:1px;
+  text-transform:uppercase; color:var(--dim2);
+}
+.hc-num {
+  font-family:'Space Grotesk',sans-serif; font-size:32px; font-weight:700;
+  letter-spacing:-1px; line-height:1; color:var(--text);
+}
+
+/* ── detail pages ─────────────────────────────────────────── */
+.detail-header { display:flex; align-items:center; gap:16px; }
+.back-btn { flex-shrink:0; background:none; border:none; color:var(--dim2);
+            font-size:18px; line-height:1; cursor:pointer; padding:4px 6px;
+            border-radius:8px; transition:color .15s; }
+.back-btn:hover { color:var(--text); }
+.detail-context { font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.5px;
+                  text-transform:uppercase; color:var(--dim2); }
+.stat-row { display:flex; gap:12px; flex-wrap:wrap; }
+.stat-chip { background:var(--surface); border:1px solid var(--border); border-radius:14px;
+             padding:12px 18px; min-width:110px; }
+.stat-chip .stat-label { font-family:'Space Mono',monospace; font-size:10px; letter-spacing:1px;
+                          text-transform:uppercase; color:var(--dim); margin-bottom:6px; }
+.stat-chip .stat-val { font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700;
+                        letter-spacing:-.5px; color:var(--text); }
+.legend-row { display:flex; gap:16px; margin-top:12px; font-size:12px; color:var(--dim); }
+.legend-row span { display:flex; align-items:center; gap:6px; }
+.leg-sq { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+/* metric card hover */
+.metric:hover { border-color:#FE510244; }
+
+/* ── pipeline flow strip ───────────────────────────────────── */
+.pipeline-strip {
+  display:flex; align-items:center;
+  background:var(--surface); border:1px solid var(--border); border-radius:20px;
+  padding:28px 32px; margin-bottom:20px; overflow-x:auto; gap:0;
+  position:relative;
+}
+.pipe-node {
+  flex-shrink:0; text-align:center; min-width:96px; padding:0 4px;
+  transition:transform .2s;
+}
+.pipe-node:hover { transform:translateY(-2px); }
+.pipe-arr {
+  flex-shrink:0; display:flex; align-items:center; padding:0 6px; margin-top:-6px;
+}
+.pipe-arr svg { width:28px; height:10px; }
+.pipe-arr line { stroke:var(--border); stroke-width:1.5; transition:stroke .3s; }
+.pipe-arr polygon { fill:var(--border); transition:fill .3s; }
+.pipe-arr.active line, .pipe-arr.active polygon { stroke:var(--accent); fill:var(--accent); }
+.pn-icon {
+  width:40px; height:40px; border-radius:12px; background:#FFFFFF06;
+  border:1px solid var(--border); display:flex; align-items:center;
+  justify-content:center; margin:0 auto 10px; transition:background .2s, border-color .2s;
+}
+.pn-icon svg { width:18px; height:18px; }
+.pn-chip {
+  display:inline-block; border-radius:999px; padding:3px 10px; margin-bottom:7px;
+  font-family:'Space Mono',monospace; font-size:9px; letter-spacing:1px;
+  text-transform:uppercase; background:#FFFFFF08; color:var(--dim2);
+  border:1px solid var(--border);
+}
+.pn-chip-algo { color:#A8D5BA; border-color:#A8D5BA44; background:#A8D5BA08; }
+.pn-chip-llm  { color:var(--accent); border-color:#FE510244; background:#FE510208; }
+.pn-chip-gate { color:var(--vanilla); border-color:#FFFAEE44; background:#FFFAEE08; }
+.pn-name { font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:600;
+           margin-bottom:3px; white-space:nowrap; }
+.pn-val  { font-family:'Space Mono',monospace; font-size:10px; color:var(--dim2);
+           letter-spacing:.5px; white-space:nowrap; }
+.pipe-node.pn-active .pn-icon {
+  background:#FE510215; border-color:var(--accent);
+  box-shadow:0 0 12px #FE510230;
+}
+.pipe-node.pn-done .pn-icon {
+  background:#07CB9C10; border-color:#07CB9C44;
+}
+.pipe-node.pn-active .pn-chip { animation:pulsechip 1s ease-in-out infinite; }
+@keyframes pulsechip { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+/* ── incident trace card ────────────────────────────────────── */
+.trace-card {
+  border:1px solid var(--border); border-radius:14px;
+  padding:14px 16px; margin-bottom:10px;
+  transition:border-color .15s;
+}
+.trace-card:hover { border-color:#FE510244; }
+.trace-steps {
+  display:flex; align-items:center; gap:4px; margin-top:10px; flex-wrap:wrap;
+}
+.trace-step {
+  font-family:'Space Mono',monospace; font-size:9px; letter-spacing:.8px;
+  text-transform:uppercase; padding:3px 10px; border-radius:6px;
+  background:#FFFFFF06; color:var(--dim2); border:1px solid var(--border);
+}
+.trace-step.ts-triage  { color:#A8D5BA; border-color:#A8D5BA33; background:#A8D5BA08; }
+.trace-step.ts-impact  { color:#A8D5BA; border-color:#A8D5BA33; background:#A8D5BA08; }
+.trace-step.ts-orch    { color:var(--accent); border-color:#FE510233; background:#FE510208; }
+.trace-step.ts-drafter { color:var(--accent); border-color:#FE510233; background:#FE510208; }
+.trace-step.ts-rag     { color:var(--accent); border-color:#FE510233; background:#FE510208; }
+.trace-step.ts-gate    { color:var(--vanilla); border-color:#FFFAEE33; background:#FFFAEE08; }
+.trace-arrow { color:var(--dim2); font-size:12px; }
+
+/* demo button */
+.demo-btn {
+  background:var(--accent); color:var(--vanilla); border:0;
+  border-radius:10px; padding:8px 20px; font:600 13px 'Inter',sans-serif;
+  cursor:pointer; transition:background .15s; display:flex; align-items:center; gap:8px;
+}
+.demo-btn:hover { background:#E64400; }
+.demo-btn:disabled { background:#555; cursor:not-allowed; }
+
+</style>
+</head>
+<body>
+<div id="grain" aria-hidden="true"></div>
+
+<!-- ═══ SIDEBAR ═══════════════════════════════════════════════ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="wordmark">
+      Enerparc Pulse
+    </div>
+    <div class="sub">O&M Command Crew</div>
+  </div>
+
+  <div class="nav-body">
+    <div class="nav-section">Main</div>
+
+    <button class="nav-item active" onclick="nav('overview',this)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+        <rect x="1" y="1" width="6" height="6" rx="1.5"/>
+        <rect x="9" y="1" width="6" height="6" rx="1.5"/>
+        <rect x="1" y="9" width="6" height="6" rx="1.5"/>
+        <rect x="9" y="9" width="6" height="6" rx="1.5"/>
+      </svg>
+      Overview
+    </button>
+
+    <button class="nav-item" onclick="nav('agents',this)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+        <circle cx="8" cy="6" r="3"/>
+        <path d="M2 14c0-3 2.7-5 6-5s6 2 6 5"/>
+        <circle cx="13" cy="4" r="1.5" fill="currentColor" stroke="none"/>
+      </svg>
+      Agent Crew
+    </button>
+
+    <button class="nav-item" onclick="nav('chat',this)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+        <path d="M2 3h12a1 1 0 011 1v7a1 1 0 01-1 1H5l-3 2V4a1 1 0 011-1Z"/>
+      </svg>
+      Compliance Chat
+    </button>
+
+    <div class="nav-section">Actions</div>
+
+    <button class="nav-item" onclick="nav('tickets',this)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+        <path d="M10 2H3a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1V6l-4-4Z"/>
+        <path d="M10 2v4h4M5 8h6M5 11h4"/>
+      </svg>
+      Old Tickets
+      <span class="nav-badge" id="nav-tickets-count">—</span>
+    </button>
+
+    <button class="nav-item" onclick="nav('queue',this)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+        <path d="M8 1l2 4 5 .7-3.5 3.4.8 5L8 11.8 3.7 14.1l.8-5L1 5.7 6 5z"/>
+      </svg>
+      New Tickets
+      <span class="nav-badge" id="nav-queue-count">—</span>
+    </button>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="inv-selector">
+      <label>Inverter</label>
+      <select id="invsel"></select>
+      <div class="inv-meta" id="invmeta">30.6 kWp · advisory only</div>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ MAIN CONTENT ══════════════════════════════════════════ -->
+<div class="main">
+
+  <!-- topbar -->
+  <div class="topbar">
+    <h1 id="page-title">Plant <em>Overview</em></h1>
+    <div class="topbar-right">
+      <span class="chip live mono">● real-time monitoring active</span>
+    </div>
+  </div>
+
+  <!-- ── PAGE: OVERVIEW ───────────────────────────────────── -->
+  <div class="page active" id="page-overview">
+
+    <!-- fleet health strip — top of page -->
+    <div class="health-strip" onclick="navDetail('health')" id="fleet-health-panel">
+      <div class="health-card" id="hc-healthy">
+        <div class="hc-icon hc-green">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M4 10l4 4 8-8"/>
+          </svg>
+        </div>
+        <div class="hc-body">
+          <div class="hc-label">Online</div>
+          <div class="hc-num" id="fleet-n-healthy">—</div>
+        </div>
+      </div>
+      <div class="health-divider"></div>
+      <div class="health-card" id="hc-offline">
+        <div class="hc-icon hc-red">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M5 5l10 10M15 5L5 15"/>
+          </svg>
+        </div>
+        <div class="hc-body">
+          <div class="hc-label">Offline</div>
+          <div class="hc-num" id="fleet-n-offline">—</div>
+        </div>
+      </div>
+      <div class="health-divider"></div>
+      <div class="health-card" style="flex:1">
+        <div id="fleet-health-dots" style="display:flex;gap:20px;align-items:center;flex-wrap:wrap"></div>
+      </div>
+    </div>
+
+    <div class="sec-head mt20">
+      <h2>Performance Summary</h2>
+      <span class="count mono" id="ov-period">2023 · full year</span>
+    </div>
+
+    <div class="grid4">
+      <div class="metric" onclick="navDetail('yield')" style="cursor:pointer">
+        <div class="head"><span>Annual Yield, MWh</span>
+          <svg viewBox="0 0 16 16"><path d="M3 13L13 3M13 3H6M13 3v7" stroke="#191919" stroke-width="1.5" fill="none"/></svg>
+        </div>
+        <div class="big" id="m-yield">—</div>
+        <ul class="legend">
+          <li><span class="dot dot-o"></span>Peak month<span class="val" id="m-peak">—</span></li>
+          <li><span class="dot dot-k"></span>Best day<span class="val" id="m-best">—</span></li>
+        </ul>
+        <div class="bars" id="yield"></div>
+        <div class="axis"><span>Jan</span><span>Dec</span></div>
+      </div>
+
+      <div class="metric" onclick="navDetail('incs')" style="cursor:pointer">
+        <div class="head"><span>Incidents, 2023</span>
+          <svg viewBox="0 0 16 16"><path d="M3 13L13 3M13 3H6M13 3v7" stroke="#191919" stroke-width="1.5" fill="none"/></svg>
+        </div>
+        <div class="big" id="m-incs">—</div>
+        <ul class="legend">
+          <li><span class="dot dot-o"></span>Faults — truck roll<span class="val" id="m-faults">—</span></li>
+          <li><span class="dot dot-k"></span>Curtailments — claim<span class="val" id="m-curts">—</span></li>
+          <li><span class="dot dot-g"></span>Other / log<span class="val" id="m-grid">—</span></li>
+        </ul>
+        <div class="bars" id="counts"></div>
+        <div class="axis"><span>Jan</span><span>Dec</span></div>
+      </div>
+
+      <div class="metric" onclick="navDetail('eur')" style="cursor:pointer">
+        <div class="head"><span>Revenue Impact, €</span>
+          <svg viewBox="0 0 16 16"><path d="M3 13L13 3M13 3H6M13 3v7" stroke="#191919" stroke-width="1.5" fill="none"/></svg>
+        </div>
+        <div class="big" id="m-eur">—<small> €</small></div>
+        <ul class="legend">
+          <li><span class="dot dot-o"></span>Fault losses<span class="val" id="m-eurf">—</span></li>
+          <li><span class="dot dot-k"></span>Curtailment — claimable<span class="val" id="m-eurc">—</span></li>
+        </ul>
+        <div class="bars split" id="eur"></div>
+        <div class="axis"><span>Jan</span><span>Dec</span></div>
+      </div>
+
+      <div class="metric" onclick="navDetail('pr')" style="cursor:pointer">
+        <div class="head"><span>Performance Ratio</span>
+          <svg viewBox="0 0 16 16"><path d="M3 13L13 3M13 3H6M13 3v7" stroke="#191919" stroke-width="1.5" fill="none"/></svg>
+        </div>
+        <div class="gaugewrap">
+          <svg class="gauge" viewBox="0 0 150 84">
+            <path class="track" d="M12 78 A 63 63 0 0 1 138 78" fill="none" stroke-width="11" stroke-linecap="round"/>
+            <path class="arc" id="m-arc" d="M12 78 A 63 63 0 0 1 138 78" fill="none" stroke-width="11" stroke-linecap="round"
+                  stroke-dasharray="198" stroke-dashoffset="40"/>
+            <text x="75" y="74" text-anchor="middle" id="m-pr">—</text>
+          </svg>
+        </div>
+        <ul class="legend">
+          <li><span class="dot dot-o"></span>Feed-in tariff<span class="val" id="m-fit">—</span></li>
+          <li><span class="dot dot-k"></span>Curtailed days<span class="val" id="m-curtdays">—</span></li>
+          <li><span class="dot dot-g"></span>Worst incident<span class="val" id="m-longest">—</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- PR validation: actual vs predicted -->
+    <div class="mt20 panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <h2>Performance Ratio <span class="panel-sub">· measured vs ML-predicted · 2018 validation</span></h2>
+        <div id="pr-stats" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--dim2)"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:18px;margin:6px 0 4px;font-size:11px;color:var(--dim)">
+        <span><span style="display:inline-block;width:18px;height:2px;background:var(--accent);vertical-align:middle;margin-right:5px"></span>Measured PR</span>
+        <span><span style="display:inline-block;width:18px;height:0;border-top:2px dashed var(--success);vertical-align:middle;margin-right:5px"></span>ML-predicted PR</span>
+      </div>
+      <div id="pr-chart" style="margin-top:4px"></div>
+    </div>
+  </div>
+
+  <!-- ── PAGE: DETAIL — HEALTH ────────────────────────────── -->
+  <div class="page" id="page-detail-health">
+    <div class="detail-header">
+      <button class="back-btn" onclick="backToOverview()">←</button>
+      <span class="detail-context" id="dh-inv"></span>
+    </div>
+    <div class="stat-row mt14" id="dh-stats"></div>
+    <div class="panel mt20">
+      <h2>Inverter Status <span class="panel-sub">· last 14-day window</span></h2>
+      <div id="dh-rows" style="margin-top:16px;display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+  </div>
+
+  <!-- ── PAGE: DETAIL — YIELD ─────────────────────────────── -->
+  <div class="page" id="page-detail-yield">
+    <div class="detail-header">
+      <button class="back-btn" onclick="backToOverview()">←</button>
+      <span class="detail-context" id="dy-inv"></span>
+    </div>
+    <div class="stat-row mt14" id="dy-stats"></div>
+    <div class="panel mt20">
+      <h2>Monthly Actual vs Expected <span class="panel-sub">MWh · 2023</span></h2>
+      <div id="dy-monthly" style="margin-top:12px"></div>
+      <div class="legend-row">
+        <span><span class="leg-sq" style="background:#FE5102"></span>Actual MWh</span>
+        <span><span class="leg-sq" style="background:#2a2a2a"></span>Expected MWh</span>
+      </div>
+    </div>
+    <div class="panel mt14">
+      <h2>Daily Production <span class="panel-sub">kWh · gray = curtailed</span></h2>
+      <div id="dy-daily" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- ── PAGE: DETAIL — INCIDENTS ──────────────────────────── -->
+  <div class="page" id="page-detail-incs">
+    <div class="detail-header">
+      <button class="back-btn" onclick="backToOverview()">←</button>
+      <span class="detail-context" id="di-inv"></span>
+    </div>
+    <div class="stat-row mt14" id="di-stats"></div>
+    <div class="grid2 mt20">
+      <div class="panel">
+        <h2>Monthly Count <span class="panel-sub">by classification</span></h2>
+        <div id="di-monthly" style="margin-top:12px"></div>
+        <div class="legend-row">
+          <span><span class="leg-sq" style="background:#FE5102"></span>Fault</span>
+          <span><span class="leg-sq" style="background:#383838"></span>Curtailment</span>
+          <span><span class="leg-sq" style="background:#252525"></span>Other</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Subtype Breakdown</h2>
+        <div id="di-subtypes" style="margin-top:12px;overflow:hidden"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PAGE: DETAIL — REVENUE ─────────────────────────────── -->
+  <div class="page" id="page-detail-eur">
+    <div class="detail-header">
+      <button class="back-btn" onclick="backToOverview()">←</button>
+      <span class="detail-context" id="de-inv"></span>
+    </div>
+    <div class="stat-row mt14" id="de-stats"></div>
+    <div class="grid2 mt20">
+      <div class="panel">
+        <h2>Monthly EUR <span class="panel-sub">fault + curtailment</span></h2>
+        <div id="de-monthly" style="margin-top:12px"></div>
+        <div class="legend-row">
+          <span><span class="leg-sq" style="background:#FE5102"></span>Fault losses</span>
+          <span><span class="leg-sq" style="background:#383838"></span>Curtailment claim</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Top Incidents by EUR</h2>
+        <div style="overflow-x:auto;margin-top:12px">
+          <table class="data-table">
+            <thead><tr><th>Inverter</th><th>Date</th><th>Type</th><th>EUR</th></tr></thead>
+            <tbody id="de-top-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PAGE: DETAIL — PR ──────────────────────────────────── -->
+  <div class="page" id="page-detail-pr">
+    <div class="detail-header">
+      <button class="back-btn" onclick="backToOverview()">←</button>
+      <span class="detail-context" id="dp-inv"></span>
+    </div>
+    <div class="stat-row mt14" id="dp-stats"></div>
+    <div class="panel mt20">
+      <h2>Daily PR <span class="panel-sub">orange = flagged · gray = curtailed · dashed lines = 0.75 EPC floor &amp; 0.85 target</span></h2>
+      <div id="dp-daily" style="margin-top:12px"></div>
+      <div class="legend-row">
+        <span><span class="leg-sq" style="background:#FFFAEE"></span>Healthy</span>
+        <span><span class="leg-sq" style="background:#505050"></span>Curtailed</span>
+        <span><span class="leg-sq" style="background:#FE5102"></span>Flagged incident</span>
+      </div>
+    </div>
+    <div class="panel mt14">
+      <h2 id="dp-monthly-title">Monthly Average PR</h2>
+      <div id="dp-monthly" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- ── PAGE: AGENTS ─────────────────────────────────────── -->
+  <div class="page" id="page-agents">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;letter-spacing:-.5px">Agent Crew</h2>
+        <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim2);margin-top:3px">5 agents · EU AI Act advisory-only · human gate on every output</div>
+      </div>
+      <button class="demo-btn" id="demo-run-btn" onclick="runPipelineDemo()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6V2z"/></svg>
+        Run Demo
+      </button>
+    </div>
+
+    <!-- pipeline flow -->
+    <div class="pipeline-strip" id="pipeline-flow">
+      <div class="pipe-node" id="pn-scada">
+        <div class="pn-chip">SCADA</div>
+        <div class="pn-icon">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="2" y="3" width="16" height="11" rx="2"/>
+            <path d="M6 17h8M10 14v3M5 8l2 2 2-3 2 4 2-2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="pn-name">SCADA Input</div>
+        <div class="pn-val" id="ps-rows">5-min telemetry</div>
+      </div>
+      <div class="pipe-arr" id="pa-1">
+        <svg viewBox="0 0 28 10"><line x1="0" y1="5" x2="22" y2="5" stroke="var(--border)" stroke-width="1.5"/><polygon points="22,2 28,5 22,8" fill="var(--border)"/></svg>
+      </div>
+      <div class="pipe-node" id="pn-triage">
+        <div class="pn-chip pn-chip-algo">Algo</div>
+        <div class="pn-icon">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="10" cy="10" r="7"/>
+            <line x1="10" y1="3" x2="10" y2="17"/>
+            <line x1="3" y1="10" x2="17" y2="10"/>
+            <path d="M10 10 L13 7" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="pn-name">Triage</div>
+        <div class="pn-val" id="ps-windows">PR cascade</div>
+      </div>
+      <div class="pipe-arr" id="pa-2">
+        <svg viewBox="0 0 28 10"><line x1="0" y1="5" x2="22" y2="5" stroke="var(--border)" stroke-width="1.5"/><polygon points="22,2 28,5 22,8" fill="var(--border)"/></svg>
+      </div>
+      <div class="pipe-node" id="pn-impact">
+        <div class="pn-chip pn-chip-algo">Algo</div>
+        <div class="pn-icon">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M10 2v16M6 6h8M6 14h8" stroke-linecap="round"/>
+            <circle cx="10" cy="10" r="7"/>
+          </svg>
+        </div>
+        <div class="pn-name">Impact</div>
+        <div class="pn-val" id="ps-eur">lost kWh × FiT</div>
+      </div>
+      <div class="pipe-arr" id="pa-3">
+        <svg viewBox="0 0 28 10"><line x1="0" y1="5" x2="22" y2="5" stroke="var(--border)" stroke-width="1.5"/><polygon points="22,2 28,5 22,8" fill="var(--border)"/></svg>
+      </div>
+      <div class="pipe-node" id="pn-orch">
+        <div class="pn-chip pn-chip-llm">LLM</div>
+        <div class="pn-icon">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="5" cy="5" r="2"/><circle cx="15" cy="5" r="2"/>
+            <circle cx="5" cy="15" r="2"/><circle cx="15" cy="15" r="2"/>
+            <circle cx="10" cy="10" r="2"/>
+            <line x1="7" y1="5" x2="13" y2="10"/><line x1="13" y1="5" x2="7" y2="10"/>
+            <line x1="7" y1="15" x2="13" y2="10"/><line x1="13" y1="15" x2="7" y2="10"/>
+          </svg>
+        </div>
+        <div class="pn-name">Orchestrator</div>
+        <div class="pn-val" id="ps-routes">dispatch / claim / log</div>
+      </div>
+      <div class="pipe-arr" id="pa-4">
+        <svg viewBox="0 0 28 10"><line x1="0" y1="5" x2="22" y2="5" stroke="var(--border)" stroke-width="1.5"/><polygon points="22,2 28,5 22,8" fill="var(--border)"/></svg>
+      </div>
+      <div class="pipe-node" id="pn-draft">
+        <div class="pn-chip pn-chip-llm">LLM</div>
+        <div class="pn-icon">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M4 14L3 17l3-1 8-8-2-2-8 8z"/><path d="M13 5l2 2"/>
+          </svg>
+        </div>
+        <div class="pn-name">Drafter</div>
+        <div class="pn-val" id="ps-drafts">work orders + EEG</div>
+      </div>
+      <div class="pipe-arr" id="pa-5">
+        <svg viewBox="0 0 28 10"><line x1="0" y1="5" x2="22" y2="5" stroke="var(--border)" stroke-width="1.5"/><polygon points="22,2 28,5 22,8" fill="var(--border)"/></svg>
+      </div>
+      <div class="pipe-node" id="pn-rag">
+        <div class="pn-chip pn-chip-llm">RAG</div>
+        <div class="pn-icon">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M4 3h9l3 3v11H4V3z"/><path d="M13 3v3h3"/>
+            <path d="M7 9h6M7 12h4"/>
+          </svg>
+        </div>
+        <div class="pn-name">RAG Compliance</div>
+        <div class="pn-val" id="ps-regs">EEG · NIS2 · AI Act</div>
+      </div>
+      <div class="pipe-arr" id="pa-6">
+        <svg viewBox="0 0 28 10"><line x1="0" y1="5" x2="22" y2="5" stroke="var(--border)" stroke-width="1.5"/><polygon points="22,2 28,5 22,8" fill="var(--border)"/></svg>
+      </div>
+      <div class="pipe-node" id="pn-gate">
+        <div class="pn-chip pn-chip-gate">Gate</div>
+        <div class="pn-icon" style="background:#FFFAEE08;border-color:#FFFAEE22">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M10 2a4 4 0 014 4v2H6V6a4 4 0 014-4z"/>
+            <rect x="3" y="8" width="14" height="10" rx="2"/>
+            <circle cx="10" cy="13" r="1.5" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+        <div class="pn-name">Human Gate</div>
+        <div class="pn-val" id="ps-pending">advisory only</div>
+      </div>
+    </div>
+
+    <!-- summary chips -->
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+      <div class="stat-chip"><div class="stat-label">Total Incidents</div><div class="stat-val" id="ag-total">—</div></div>
+      <div class="stat-chip"><div class="stat-label">EUR at Risk</div><div class="stat-val" id="ag-eur" style="color:var(--accent)">—<small style="font-size:13px;font-weight:400"> €</small></div></div>
+      <div class="stat-chip"><div class="stat-label">Pending Approval</div><div class="stat-val" id="ag-pending" style="color:var(--accent)">—</div></div>
+      <div class="stat-chip"><div class="stat-label">Detection</div><div class="stat-val" style="color:#4ade80">100<small style="font-size:13px;font-weight:400">%</small></div></div>
+      <div class="stat-chip"><div class="stat-label">LLM Calls / Run</div><div class="stat-val">3</div></div>
+      <div class="stat-chip"><div class="stat-label">Avg Pipeline</div><div class="stat-val">4.1<small style="font-size:13px;font-weight:400"> s</small></div></div>
+    </div>
+
+    <!-- agent cards -->
+    <div class="grid4" style="margin-bottom:20px">
+      <div class="agent">
+        <span class="illus"><svg viewBox="0 0 479.645 479.644" fill="none">
+          <path d="M243.375 0H236.269V175.514H243.375V0Z" fill="var(--fill-0,#FFFAEE)"/>
+          <path d="M243.375 304.13H236.269V479.644H243.375V304.13Z" fill="var(--fill-0,#FFFAEE)"/>
+          <path d="M175.514 236.269H0V243.375H175.514V236.269Z" fill="var(--fill-0,#FFFAEE)"/>
+          <path d="M479.645 236.269H304.131V243.375H479.645V236.269Z" fill="var(--fill-0,#FFFAEE)"/>
+          <path d="M239.822 404.323C148.867 404.323 74.9666 330.422 74.9666 239.467C74.9666 148.512 148.867 74.6115 239.822 74.6115C330.777 74.6115 404.677 148.512 404.677 239.467C404.677 330.422 330.422 404.323 239.822 404.323ZM239.822 82.0726C152.776 82.0726 82.0725 152.776 82.0725 239.822C82.0725 326.869 152.776 397.572 239.822 397.572C326.869 397.572 397.572 326.869 397.572 239.822C397.572 152.776 326.514 82.0726 239.822 82.0726Z" fill="var(--fill-0,#FFFAEE)"/>
+          <path d="M243.375 236.27H304.13C302.353 203.583 276.062 177.291 243.375 175.514L243.375 236.27Z" fill="var(--fill-0,#FFFAEE)"/>
+          <path d="M236.269 236.27L236.269 175.514C203.583 177.291 177.29 203.582 175.514 236.269L236.269 236.27Z" fill="var(--fill-0,#FFFAEE)"/>
+          <path d="M236.269 243.375L175.514 243.375C177.29 276.062 203.582 302.354 236.269 304.13L236.269 243.375Z" fill="var(--fill-0,#FFFAEE)"/>
+          <path d="M243.375 243.375L243.375 304.13C276.062 302.354 302.353 276.062 304.13 243.375H243.375Z" fill="var(--fill-0,#FFFAEE)"/>
+        </svg></span>
+        <h3>Triage</h3>
+        <p>PR cascade (IEC 61724). Stage 1: ML-predicted reference PR. Stage 2: DC/AC split, soiling vs string step, curtailment gate.</p>
+        <span class="status-badge s-live" id="a-triage">— windows</span>
+      </div>
+      <div class="agent">
+        <span class="illus"><svg viewBox="0 0 480 480" fill="none">
+          <path d="M409.482 70.272C315.843-23.424 163.87-23.424 70.2298 70.272C-23.4099 163.968-23.4099 316.032 70.2298 409.728C163.87 503.424 315.843 503.424 409.482 409.728C503.506 315.648 503.506 163.968 409.482 70.272ZM396.818 264.576H328.123C292.816 264.576 264.417 292.992 264.417 328.32V397.056H215.295V328.32C215.295 292.992 186.896 264.576 151.589 264.576H82.8942V215.424H151.589C186.896 215.424 215.295 187.008 215.295 151.68V82.944H264.417V151.68C264.417 187.008 292.816 215.424 328.123 215.424H396.818V264.576Z" fill="var(--fill-0,#FFFAEE)"/>
+        </svg></span>
+        <h3>Impact</h3>
+        <p>Lost kWh × real per-inverter feed-in tariff. ML API provides healthy-state baseline. Every anomaly carries an exact euro tag.</p>
+        <span class="status-badge s-live" id="a-impact">— priced</span>
+      </div>
+      <div class="agent">
+        <span class="illus"><svg viewBox="0 0 480 480" fill="none">
+          <path d="M480 268.846V211.154H383.461C371.154 211.154 360 203.846 355.385 192.308V191.923C350.769 180.385 353.077 167.308 361.923 158.846L430.385 90.3846L389.615 49.6153L321.154 118.077C312.308 126.923 299.231 129.231 288.077 124.615H287.692C276.154 120 268.846 108.846 268.846 96.5384V0H211.154V96.5384C211.154 108.846 203.846 120 192.308 124.615H191.923C180.385 129.231 167.308 126.923 158.846 118.077L90.3846 49.6153L49.6155 90.3846L118.077 158.846C126.923 167.692 129.231 180.769 124.615 191.923V192.308C120 203.846 108.846 211.154 96.5383 211.154H0V268.846H96.5383C108.846 268.846 120 276.154 124.615 287.692V288.077C129.231 299.615 126.923 312.692 118.077 321.154L49.6155 389.615L90.3846 430.385L158.846 361.923C167.692 353.077 180.769 350.769 191.923 355.385H192.308C203.846 360 211.154 371.154 211.154 383.461V480H268.846V383.461C268.846 371.154 276.154 360 287.692 355.385H288.077C299.615 350.769 312.692 353.077 321.154 361.923L389.615 430.385L430.385 389.615L361.923 321.154C353.077 312.308 350.769 299.231 355.385 288.077V287.692C360 276.154 371.154 268.846 383.461 268.846H480Z" fill="var(--fill-0,#FFFAEE)"/>
+        </svg></span>
+        <h3>Orchestrator + Drafter</h3>
+        <p>LLM routes: dispatch → truck roll, claim → EEG §15, log → watchlist. Drafter renders work orders and compensation letters.</p>
+        <span class="status-badge s-warn" id="a-drafts">— pending approval</span>
+      </div>
+      <div class="agent">
+        <span class="illus"><svg viewBox="0 0 480.003 479.999" fill="none">
+          <path d="M480.003 228.297H434.727V251.319H480.003V228.297Z" fill="var(--fill-0,#FFFAEE)"/>
+          <path d="M45.276 228.297H0V251.319H45.276V228.297Z" fill="var(--fill-0,#FFFAEE)"/>
+          <path d="M251.699 0.384277H228.678V45.6601H251.699V0.384277Z" fill="var(--fill-0,#FFFAEE)"/>
+          <path d="M251.699 434.724H228.678V479.999H251.699V434.724Z" fill="var(--fill-0,#FFFAEE)"/>
+          <path d="M78.3801 62.2888L62.1016 78.5674L94.1161 110.582L110.395 94.3034L78.3801 62.2888Z" fill="var(--fill-0,#FFFAEE)"/>
+          <path d="M385.777 369.468L369.498 385.747L401.513 417.761L417.791 401.482L385.777 369.468Z" fill="var(--fill-0,#FFFAEE)"/>
+          <path d="M94.1608 369.421L62.1465 401.435L78.425 417.714L110.439 385.699L94.1608 369.421Z" fill="var(--fill-0,#FFFAEE)"/>
+          <path d="M401.325 62.0204L369.311 94.0347L385.589 110.313L417.603 78.2989L401.325 62.0204Z" fill="var(--fill-0,#FFFAEE)"/>
+          <path d="M268.586 244.029C269.353 237.122 268.202 230.6 264.749 225.228C256.692 211.415 251.32 196.067 251.32 179.952V0H228.298V178.801C228.298 194.532 224.462 210.264 215.637 223.693C212.567 228.297 210.648 233.669 210.648 239.808C210.648 257.074 225.612 270.504 243.262 268.585C256.308 267.434 268.586 257.074 268.586 244.029Z" fill="var(--fill-0,#FFFAEE)"/>
+        </svg></span>
+        <h3>Forecast + ML API</h3>
+        <p>Chronos-Bolt 24 h on AWS Lambda. LightGBM PR model on Render supplies healthy-state baseline — replaces fleet-median heuristic.</p>
+        <span class="status-badge s-live">live · eu-north-1 + render</span>
+      </div>
+    </div>
+
+    <!-- incident traces -->
+    <div class="sec-head">
+      <h2>Incident Traces <span class="panel-sub">· last pipeline run · real Enerparc data</span></h2>
+      <span class="count mono" id="ag-trace-count">loading…</span>
+    </div>
+    <div style="margin-top:14px" id="ag-traces"></div>
+
+    <!-- agent timing -->
+    <div class="panel mt20">
+      <h2>Agent Timing <span class="panel-sub">· deterministic (gray) vs LLM (orange)</span></h2>
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px" id="ao-timing"></div>
+    </div>
+
+  </div>
+
+  <!-- ── PAGE: COMPLIANCE CHAT ────────────────────────────── -->
+  <div class="page" id="page-chat">
+    <div class="sec-head">
+      <h2>Compliance Chat</h2>
+      <span class="count mono">EEG · BNetzA · IEC 61724 · EU AI Act</span>
+    </div>
+    <div class="chat-wrap">
+      <div class="chat-messages" id="chat-msgs">
+        <div class="chat-msg bot">
+          <div class="chat-sender">Enerparc Pulse RAG</div>
+          <div class="chat-bubble">
+            Hi. I can answer compliance questions grounded in the regulations we monitor: EEG §15 curtailment compensation, BNetzA MaStR reporting obligations, IEC 61724-1 performance ratio definitions, Redispatch 2.0, §14a EnWG dimming rules, and the EU AI Act advisory-only posture.<br><br>
+            Ask me anything — e.g. <em>"When does a curtailment event become an EEG §15 claim?"</em> or <em>"What triggers a NIS2 incident report?"</em>
+          </div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chat-in" rows="2" placeholder="Ask about EEG, BNetzA, IEC 61724, EU AI Act…"></textarea>
+        <button class="chat-send" onclick="chatSend()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PAGE: TICKETS ────────────────────────────────────── -->
+  <div class="page" id="page-tickets">
+    <div class="sec-head">
+      <h2>Old Tickets</h2>
+      <span class="count mono" id="tickets-count">loading…</span>
+    </div>
+    <div class="panel">
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead><tr>
+            <th>Component</th><th>Start</th><th>End</th><th>Category</th><th>Duration</th>
+          </tr></thead>
+          <tbody id="tickets-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PAGE: APPROVAL QUEUE ─────────────────────────────── -->
+  <div class="page" id="page-queue">
+    <div class="sec-head">
+      <h2>New Tickets</h2>
+      <span class="count mono" id="queue-count">—</span>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px" id="queue-filters">
+      <button class="q-filter active" data-f="all"      onclick="setQFilter('all',this)">All</button>
+      <button class="q-filter"        data-f="dispatch"  onclick="setQFilter('dispatch',this)">🔴 Dispatch</button>
+      <button class="q-filter"        data-f="claim"     onclick="setQFilter('claim',this)">🟢 Claim</button>
+      <button class="q-filter"        data-f="monitor"   onclick="setQFilter('monitor',this)">🟡 Monitor</button>
+      <button class="q-filter"        data-f="pending"   onclick="setQFilter('pending',this)">⏳ Pending only</button>
+    </div>
+    <!-- master-detail split -->
+    <div class="queue-split">
+      <!-- LEFT: compact list -->
+      <div class="queue-list" id="dq"></div>
+      <!-- RIGHT: detail panel -->
+      <div class="queue-detail-panel" id="queue-detail-panel">
+        <div class="queue-detail-empty" id="queue-detail-empty">
+          <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--dim2);text-transform:uppercase">Select a ticket</div>
+          <div style="font-size:13px;color:var(--dim);margin-top:8px">Click any row to view the full O&M ticket</div>
+        </div>
+        <div id="queue-detail-content" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+const API = location.protocol==='file:' ? 'http://localhost:8080' : '';
+const el = (t,c) => { const e=document.createElement(t); if(c) e.className=c; return e; };
+const $ = id => document.getElementById(id);
+const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const monthsOf = (dates, vals) => {
+  const m = Array(12).fill(0);
+  dates.forEach((d,i) => m[+d.slice(5,7)-1] += vals[i]);
+  return m;
+};
+let META = {}, CUR = null, ALL_INCS = [], TICKETS_CACHE = null, LAST = null, LOAD_SEQ = 0, ACTIVE_DETAIL = null, QUEUE_FILTER = 'all', SELECTED_INC = null;
+const ALL_KEY = '__all__';
+const svgOpen=(w,h)=>`<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" xmlns="http://www.w3.org/2000/svg">`;
+const svgClose=()=>'</svg>';
+
+// ── page navigation ──────────────────────────────────────────
+const PAGE_TITLES = {
+  overview:  'Plant <em>Overview</em>',
+  agents:    'Agent <em>Crew</em>',
+  chat:      'Compliance <em>Chat</em>',
+  tickets:   'Old <em>Tickets</em>',
+  queue:     'New <em>Tickets</em>',
+  'detail-health':'Fleet <em>Health</em>',
+  'detail-yield': 'Annual <em>Yield</em>',
+  'detail-incs':  'Incident <em>Analysis</em>',
+  'detail-eur':   'Revenue <em>Impact</em>',
+  'detail-pr':    'Performance <em>Ratio</em>',
+};
+function nav(page, btn) {
+  ACTIVE_DETAIL = null;
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  $('page-'+page).classList.add('active');
+  $('page-title').innerHTML = PAGE_TITLES[page];
+  if (page==='tickets') renderTickets();
+  if (page==='agents') renderAgentOps();
+  try { localStorage.setItem('bw_page', page); } catch (_) {}  // survive reload
+}
+
+// ── bar helpers ──────────────────────────────────────────────
+function bars(id, vals, max, h=72) {
+  const b = $(id); b.innerHTML = '';
+  vals.forEach(v => {
+    const m=el('div','m'), u=el('i','up');
+    u.style.height = Math.max(v>0?3:0, v/max*h)+'px';
+    m.appendChild(u); b.appendChild(m);
+  });
+}
+function splitBars(id, up, dn) {
+  const b = $(id); b.innerHTML = '';
+  const max = Math.max(...up,...dn,1);
+  up.forEach((v,i) => {
+    const m=el('div','m'), u=el('i','up'), d=el('i','dn');
+    u.style.height = Math.max(v>0?3:0, v/max*40)+'px';
+    d.style.height = Math.max(dn[i]>0?3:0, dn[i]/max*40)+'px';
+    m.appendChild(u); m.appendChild(d); b.appendChild(m);
+  });
+}
+
+// ── aggregate helpers ─────────────────────────────────────────
+function addMonthly(a, b) { return a.map((v,i) => v + (b[i]||0)); }
+
+// ── load inverter data (single or fleet) ─────────────────────
+async function load(inv) {
+  const seq = ++LOAD_SEQ;
+  CUR = inv;
+  const isAll = inv === ALL_KEY;
+  const invList = isAll ? Object.keys(META) : [inv];
+
+  // update sidebar meta line immediately (fast, no async needed)
+  if (isAll) {
+    const totalKwp = Object.values(META).reduce((s,m)=>s+m.kwp, 0);
+    $('invmeta').textContent = `${invList.length} inverters · ${totalKwp.toFixed(0)} kWp total`;
+  } else {
+    const m = META[inv];
+    $('invmeta').textContent = `${m.kwp} kWp · ${m.fit_ct_kwh} ct/kWh`;
+  }
+
+  // fetch all needed inverters in parallel
+  const fetches = invList.map(i => Promise.all([
+    fetch(`${API}/api/timeseries?inv=${encodeURIComponent(i)}`).then(r=>r.json()),
+    fetch(`${API}/api/incidents?inv=${encodeURIComponent(i)}`).then(r=>r.json()),
+  ]));
+  const results = await Promise.all(fetches);
+
+  // a newer load() was dispatched while we were fetching — discard stale result
+  if (seq !== LOAD_SEQ) return;
+
+  // merge / aggregate
+  const incs = results.flatMap(([,i]) => i);
+  const allTs = results.map(([t]) => t);
+
+  // aggregate timeseries: sum daily actual/expected, OR of curtailed
+  const refTs = allTs[0];
+  const actualSum   = allTs.reduce((acc, ts) => acc.map((v,i)=>v+(ts.actual_kwh[i]||0)),   new Array(refTs.dates.length).fill(0));
+  const expectedSum = allTs.reduce((acc, ts) => acc.map((v,i)=>v+(ts.expected_kwh[i]||0)), new Array(refTs.dates.length).fill(0));
+  const curtailedOr = allTs.reduce((acc, ts) => acc.map((v,i)=>v||(ts.curtailed[i]||false)), new Array(refTs.dates.length).fill(false));
+  const ts = { dates: refTs.dates, actual_kwh: actualSum, expected_kwh: expectedSum, curtailed: curtailedOr };
+
+  // aggregate meta
+  const totalMwh  = invList.reduce((s,i)=>s+META[i].year_mwh, 0);
+  const avgPr     = invList.reduce((s,i)=>s+META[i].plant_factor, 0) / invList.length;
+  const avgFit    = invList.reduce((s,i)=>s+META[i].fit_ct_kwh, 0) / invList.length;
+  const m = isAll
+    ? { kwp: Object.values(META).reduce((s,m)=>s+m.kwp,0), fit_ct_kwh: +avgFit.toFixed(1),
+        year_mwh: +totalMwh.toFixed(1), plant_factor: +avgPr.toFixed(3) }
+    : META[inv];
+
+  // ── card 1: yield ───────────────────────────────────────────
+  const my = monthsOf(ts.dates, ts.actual_kwh).map(v=>v/1000);
+  const peak = Math.max(...my);
+  const peakMon = MN[my.indexOf(peak)];
+  const bestDayVal = Math.max(...ts.actual_kwh);
+  const bestDayIdx = ts.actual_kwh.indexOf(bestDayVal);
+  $('m-yield').textContent = m.year_mwh.toFixed(1);
+  $('m-peak').textContent = `${peakMon} · ${peak.toFixed(1)}`;
+  $('m-best').textContent = isAll
+    ? `Fleet peak · ${peak.toFixed(1)} MWh`
+    : `${ts.dates[bestDayIdx]?.slice(5)} · ${(bestDayVal/1000).toFixed(2)}`;
+  bars('yield', my, peak);
+
+  // ── card 2: incidents ────────────────────────────────────────
+  const faults = incs.filter(i=>i.classification==='fault');
+  const curts  = incs.filter(i=>i.classification==='curtailment');
+  $('m-incs').textContent = incs.length;
+  $('m-faults').textContent = faults.length;
+  $('m-curts').textContent = curts.length;
+  $('m-grid').textContent = incs.length - faults.length - curts.length;
+  const cm = Array(12).fill(0);
+  incs.forEach(i => cm[+i.start.slice(5,7)-1]++);
+  bars('counts', cm, Math.max(...cm,1));
+
+  // ── card 3: EUR ──────────────────────────────────────────────
+  const ef=Array(12).fill(0), ec=Array(12).fill(0);
+  faults.forEach(i => ef[+i.start.slice(5,7)-1] += i.eur_impact);
+  curts.forEach(i  => ec[+i.start.slice(5,7)-1] += i.eur_impact);
+  const tf=faults.reduce((s,i)=>s+i.eur_impact,0), tc=curts.reduce((s,i)=>s+i.eur_impact,0);
+  $('m-eur').innerHTML = `${Math.round(tf+tc)}<small> €</small>`;
+  $('m-eurf').textContent = `€ ${Math.round(tf)}`;
+  $('m-eurc').textContent = `€ ${Math.round(tc)}`;
+  splitBars('eur', ef, ec);
+
+  // ── card 4: PR ───────────────────────────────────────────────
+  $('m-pr').textContent = m.plant_factor.toFixed(2);
+  $('m-arc').style.strokeDashoffset = 198*(1-m.plant_factor);
+  $('m-fit').textContent = isAll ? `${m.fit_ct_kwh} ct/kWh avg` : `${m.fit_ct_kwh} ct/kWh`;
+  $('m-curtdays').textContent = ts.curtailed.filter(Boolean).length;
+  const worst = incs.slice().sort((a,b)=>b.eur_impact-a.eur_impact)[0];
+  $('m-longest').textContent = worst ? `${worst.days} d · € ${Math.round(worst.eur_impact)}` : '—';
+
+  // ── agent badges ─────────────────────────────────────────────
+  $('a-triage').textContent = `${incs.length} windows`;
+  $('a-impact').textContent = `€ ${Math.round(tf+tc)} priced`;
+  $('a-drafts').textContent = `${incs.filter(i=>i.status==='pending').length} pending`;
+
+  // ── fleet health card ────────────────────────────────────────
+  const health = allTs.map(invHealth);
+  renderFleetHealth(invList, health, allTs);
+
+  // ── store for detail pages ───────────────────────────────────
+  LAST = { inv: CUR, ts, incs, allTs, invList, isAll, my, ef, ec, tf, tc };
+
+  // ── approval queue ───────────────────────────────────────────
+  renderQueue(incs);
+
+  // ── nav badges ───────────────────────────────────────────────
+  const pending = incs.filter(i=>i.status==='pending').length;
+  $('nav-queue-count').textContent = pending || '✓';
+
+  // ── if a detail page is currently visible, re-render it ──────
+  const DETAIL_RENDERS = {
+    health: renderDetailHealth, yield: renderDetailYield,
+    incs: renderDetailIncs, eur: renderDetailEur, pr: renderDetailPr,
+  };
+  if (ACTIVE_DETAIL && DETAIL_RENDERS[ACTIVE_DETAIL]) DETAIL_RENDERS[ACTIVE_DETAIL]();
+}
+
+// ── detail page navigation ────────────────────────────────────
+async function navDetail(which) {
+  ACTIVE_DETAIL = which;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  $('page-detail-'+which).classList.add('active');
+  const titles={health:'Fleet <em>Health</em>',yield:'Annual <em>Yield</em>',incs:'Incident <em>Analysis</em>',eur:'Revenue <em>Impact</em>',pr:'Performance <em>Ratio</em>'};
+  $('page-title').innerHTML=titles[which]||which;
+  // if LAST is absent or was computed for a different inverter, reload first
+  if(!LAST || LAST.inv !== CUR) await load(CUR);
+  ({health:renderDetailHealth,yield:renderDetailYield,incs:renderDetailIncs,eur:renderDetailEur,pr:renderDetailPr})[which]?.();
+}
+function backToOverview() {
+  ACTIVE_DETAIL = null;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  $('page-overview').classList.add('active');
+  $('page-title').innerHTML=PAGE_TITLES['overview'];
+  document.querySelector('.nav-item')?.classList.add('active');
+}
+
+// ── detail: Yield ─────────────────────────────────────────────
+function renderDetailYield() {
+  const {ts,allTs,invList,isAll}=LAST;
+  $('dy-inv').textContent = isAll?`· ${invList.length} inverters`:`· ${invList[0].split('INV ')[1]}`;
+  const actualM=monthsOf(ts.dates,ts.actual_kwh).map(v=>v/1000);
+  const expectedM=monthsOf(ts.dates,ts.expected_kwh).map(v=>v/1000);
+  const totalA=(ts.actual_kwh.reduce((s,v)=>s+v,0)/1000).toFixed(1);
+  const totalE=(ts.expected_kwh.reduce((s,v)=>s+v,0)/1000).toFixed(1);
+  const peakMon=MN[actualM.indexOf(Math.max(...actualM))];
+  const bestDay=(Math.max(...ts.actual_kwh)/1000).toFixed(2);
+  $('dy-stats').innerHTML=`
+    <div class="stat-chip"><div class="stat-label">Total Actual</div><div class="stat-val">${totalA}<small style="font-size:13px;font-weight:400"> MWh</small></div></div>
+    <div class="stat-chip"><div class="stat-label">Expected</div><div class="stat-val">${totalE}<small style="font-size:13px;font-weight:400"> MWh</small></div></div>
+    <div class="stat-chip"><div class="stat-label">Peak Month</div><div class="stat-val">${peakMon}</div></div>
+    <div class="stat-chip"><div class="stat-label">Best Day</div><div class="stat-val">${bestDay}<small style="font-size:13px;font-weight:400"> MWh</small></div></div>`;
+
+  // Monthly bars
+  const VW=600,VH=210,PL=44,PR=8,PT=12,PB=28,PW=VW-PL-PR,PH=VH-PT-PB;
+  const maxM=Math.max(...actualM,...expectedM,1),GW=PW/12,BW=(GW-6)/2;
+  let s=svgOpen(VW,VH);
+  [0.25,0.5,0.75,1.0].forEach(v=>{
+    const y=(PT+PH*(1-v)).toFixed(1);
+    s+=`<line x1="${PL}" y1="${y}" x2="${VW-PR}" y2="${y}" stroke="#2a2a2a" stroke-width="1" stroke-dasharray="3,4"/>`;
+    s+=`<text x="${PL-4}" y="${y}" text-anchor="end" dominant-baseline="middle" font-family="Space Mono,monospace" font-size="9" fill="#555">${(maxM*v).toFixed(1)}</text>`;
+  });
+  actualM.forEach((a,i)=>{
+    const e=expectedM[i]||0,gx=PL+i*GW+3;
+    const ah=Math.max(a>0?2:0,a/maxM*PH),ay=(PT+PH-ah).toFixed(1);
+    const eh=Math.max(e>0?2:0,e/maxM*PH),ey=(PT+PH-eh).toFixed(1);
+    s+=`<rect x="${(gx+BW+2).toFixed(1)}" y="${ey}" width="${BW.toFixed(1)}" height="${eh.toFixed(1)}" fill="#2a2a2a" rx="2"/>`;
+    s+=`<rect x="${gx.toFixed(1)}" y="${ay}" width="${BW.toFixed(1)}" height="${ah.toFixed(1)}" fill="#FE5102" rx="2"/>`;
+    s+=`<text x="${(PL+(i+0.5)*GW).toFixed(1)}" y="${VH-7}" text-anchor="middle" font-family="Space Mono,monospace" font-size="9" fill="#555">${MN[i].slice(0,3)}</text>`;
+  });
+  $('dy-monthly').innerHTML=s+svgClose();
+
+  // Daily area
+  const VH2=160,PH2=VH2-PT-PB,max2=Math.max(...ts.actual_kwh,1);
+  const toX=i=>PL+i/(ts.dates.length-1)*PW;
+  const toY2=v=>PT+PH2*(1-v/max2);
+  let pts=ts.dates.map((_,i)=>`${toX(i).toFixed(1)},${toY2(ts.actual_kwh[i]).toFixed(1)}`).join(' ');
+  const lastX=toX(ts.dates.length-1).toFixed(1),baseY=(PT+PH2).toFixed(1);
+  let s2=svgOpen(VW,VH2);
+  s2+=`<polygon points="${pts} ${lastX},${baseY} ${PL},${baseY}" fill="#FE5102" opacity="0.12"/>`;
+  s2+=`<polyline points="${pts}" fill="none" stroke="#FE5102" stroke-width="1.5" stroke-linejoin="round"/>`;
+  ts.dates.forEach((d,i)=>{if(ts.curtailed[i])s2+=`<circle cx="${toX(i).toFixed(1)}" cy="${toY2(ts.actual_kwh[i]).toFixed(1)}" r="2.5" fill="#484848" opacity="0.8"/>`;});
+  [0,2,4,6,8,10].forEach(mi=>{
+    const idx=ts.dates.findIndex(d=>+d.slice(5,7)-1===mi);
+    if(idx>=0)s2+=`<text x="${toX(idx).toFixed(1)}" y="${VH2-7}" text-anchor="middle" font-family="Space Mono,monospace" font-size="9" fill="#555">${MN[mi].slice(0,3)}</text>`;
+  });
+  $('dy-daily').innerHTML=s2+svgClose();
+}
+
+// ── detail: Incidents ──────────────────────────────────────────
+function renderDetailIncs() {
+  const {incs,isAll,invList}=LAST;
+  $('di-inv').textContent=isAll?`· ${invList.length} inverters`:`· ${invList[0].split('INV ')[1]}`;
+  const faults=incs.filter(i=>i.classification==='fault');
+  const curts=incs.filter(i=>i.classification==='curtailment');
+  const others=incs.filter(i=>i.classification!=='fault'&&i.classification!=='curtailment');
+  $('di-stats').innerHTML=`
+    <div class="stat-chip"><div class="stat-label">Total</div><div class="stat-val">${incs.length}</div></div>
+    <div class="stat-chip"><div class="stat-label">Faults</div><div class="stat-val" style="color:#FE5102">${faults.length}</div></div>
+    <div class="stat-chip"><div class="stat-label">Curtailments</div><div class="stat-val">${curts.length}</div></div>
+    <div class="stat-chip"><div class="stat-label">Other / Log</div><div class="stat-val">${others.length}</div></div>`;
+
+  // Monthly stacked bars
+  const VW=480,VH=200,PL=24,PR=8,PT=12,PB=28,PW=VW-PL-PR,PH=VH-PT-PB;
+  const fM=Array(12).fill(0),cM=Array(12).fill(0),oM=Array(12).fill(0);
+  faults.forEach(i=>fM[+i.start.slice(5,7)-1]++);
+  curts.forEach(i=>cM[+i.start.slice(5,7)-1]++);
+  others.forEach(i=>oM[+i.start.slice(5,7)-1]++);
+  const maxM=Math.max(...fM.map((_,i)=>fM[i]+cM[i]+oM[i]),1),GW=PW/12,BW=GW-5;
+  let s=svgOpen(VW,VH);
+  [0.5,1.0].forEach(v=>{
+    const y=(PT+PH*(1-v)).toFixed(1);
+    s+=`<line x1="${PL}" y1="${y}" x2="${VW-PR}" y2="${y}" stroke="#2a2a2a" stroke-width="1" stroke-dasharray="3,4"/>`;
+    s+=`<text x="${PL-3}" y="${y}" text-anchor="end" dominant-baseline="middle" font-family="Space Mono,monospace" font-size="9" fill="#555">${Math.round(maxM*v)}</text>`;
+  });
+  fM.forEach((_,i)=>{
+    const bx=(PL+i*GW+2).toFixed(1),bw=BW.toFixed(1);
+    let y=PT+PH;
+    if(oM[i]>0){const h=oM[i]/maxM*PH;y-=h;s+=`<rect x="${bx}" y="${y.toFixed(1)}" width="${bw}" height="${h.toFixed(1)}" fill="#252525" rx="1"/>`;}
+    if(cM[i]>0){const h=cM[i]/maxM*PH;y-=h;s+=`<rect x="${bx}" y="${y.toFixed(1)}" width="${bw}" height="${h.toFixed(1)}" fill="#383838" rx="1"/>`;}
+    if(fM[i]>0){const h=fM[i]/maxM*PH;y-=h;s+=`<rect x="${bx}" y="${y.toFixed(1)}" width="${bw}" height="${h.toFixed(1)}" fill="#FE5102" rx="1"/>`;}
+    s+=`<text x="${(PL+(i+0.5)*GW).toFixed(1)}" y="${VH-7}" text-anchor="middle" font-family="Space Mono,monospace" font-size="9" fill="#555">${MN[i].slice(0,1)}</text>`;
+  });
+  $('di-monthly').innerHTML=s+svgClose();
+
+  // Subtype horizontal bars
+  const sub={};
+  incs.forEach(i=>{const k=i.subtype||i.classification;sub[k]=(sub[k]||0)+1;});
+  const sorted=Object.entries(sub).sort((a,b)=>b[1]-a[1]);
+  const maxS=sorted[0]?.[1]||1;
+  const ROW=28,PL2=108,PR2=28,VW2=480,VH2=Math.max(60,sorted.length*ROW+8),BMAX=VW2-PL2-PR2;
+  let s2=svgOpen(VW2,VH2);
+  sorted.forEach(([k,v],i)=>{
+    const y=i*ROW;
+    const cl=incs.find(inc=>inc.subtype===k||inc.classification===k)?.classification;
+    const fill=cl==='fault'?'#FE5102':cl==='curtailment'?'#383838':'#2a2a2a';
+    const bw=(v/maxS*BMAX).toFixed(1);
+    s2+=`<text x="${PL2-6}" y="${(y+ROW/2).toFixed(1)}" text-anchor="end" dominant-baseline="middle" font-family="Space Mono,monospace" font-size="9" fill="#666">${k}</text>`;
+    s2+=`<rect x="${PL2}" y="${(y+7).toFixed(1)}" width="${bw}" height="${(ROW-14).toFixed(1)}" fill="${fill}" rx="3" opacity="0.85"/>`;
+    s2+=`<text x="${(PL2+parseFloat(bw)+5).toFixed(1)}" y="${(y+ROW/2).toFixed(1)}" dominant-baseline="middle" font-family="Space Mono,monospace" font-size="9" fill="#666">${v}</text>`;
+  });
+  $('di-subtypes').innerHTML=s2+svgClose();
+}
+
+// ── detail: Revenue ────────────────────────────────────────────
+function renderDetailEur() {
+  const {incs,ef,ec,tf,tc,isAll,invList}=LAST;
+  $('de-inv').textContent=isAll?`· ${invList.length} inverters`:`· ${invList[0].split('INV ')[1]}`;
+  $('de-stats').innerHTML=`
+    <div class="stat-chip"><div class="stat-label">Total Impact</div><div class="stat-val" style="color:#FE5102">€ ${Math.round(tf+tc)}</div></div>
+    <div class="stat-chip"><div class="stat-label">Fault Losses</div><div class="stat-val">€ ${Math.round(tf)}</div></div>
+    <div class="stat-chip"><div class="stat-label">Curtailment Claim</div><div class="stat-val">€ ${Math.round(tc)}</div></div>
+    <div class="stat-chip"><div class="stat-label">Incidents</div><div class="stat-val">${incs.length}</div></div>`;
+
+  const VW=480,VH=200,PL=46,PR=8,PT=12,PB=28,PW=VW-PL-PR,PH=VH-PT-PB;
+  const maxM=Math.max(...ef.map((v,i)=>v+ec[i]),1),GW=PW/12,BW=GW-5;
+  let s=svgOpen(VW,VH);
+  [0.25,0.5,0.75,1.0].forEach(v=>{
+    const y=(PT+PH*(1-v)).toFixed(1);
+    s+=`<line x1="${PL}" y1="${y}" x2="${VW-PR}" y2="${y}" stroke="#2a2a2a" stroke-width="1" stroke-dasharray="3,4"/>`;
+    s+=`<text x="${PL-4}" y="${y}" text-anchor="end" dominant-baseline="middle" font-family="Space Mono,monospace" font-size="9" fill="#555">€${Math.round(maxM*v)}</text>`;
+  });
+  ef.forEach((_,i)=>{
+    const bx=(PL+i*GW+2).toFixed(1),bw=BW.toFixed(1);
+    let y=PT+PH;
+    if(ec[i]>0){const h=ec[i]/maxM*PH;y-=h;s+=`<rect x="${bx}" y="${y.toFixed(1)}" width="${bw}" height="${h.toFixed(1)}" fill="#383838" rx="1"/>`;}
+    if(ef[i]>0){const h=ef[i]/maxM*PH;y-=h;s+=`<rect x="${bx}" y="${y.toFixed(1)}" width="${bw}" height="${h.toFixed(1)}" fill="#FE5102" rx="1"/>`;}
+    s+=`<text x="${(PL+(i+0.5)*GW).toFixed(1)}" y="${VH-7}" text-anchor="middle" font-family="Space Mono,monospace" font-size="9" fill="#555">${MN[i].slice(0,1)}</text>`;
+  });
+  $('de-monthly').innerHTML=s+svgClose();
+
+  const tbody=$('de-top-tbody');tbody.innerHTML='';
+  incs.slice().sort((a,b)=>b.eur_impact-a.eur_impact).slice(0,10).forEach(inc=>{
+    const tr=el('tr');
+    tr.innerHTML=`<td style="font-family:'Space Mono',monospace;font-size:11px;color:var(--dim2)">${inc.inverter?.split('INV ')[1]||'—'}</td>
+      <td style="font-size:12px">${inc.start}</td>
+      <td><span class="sub-pill">${inc.subtype||inc.classification}</span></td>
+      <td style="color:var(--accent);font-weight:600">€ ${Math.round(inc.eur_impact)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── detail: PR ─────────────────────────────────────────────────
+function renderDetailPr() {
+  const {ts,allTs,invList,isAll,incs}=LAST;
+  $('dp-inv').textContent=isAll?`· ${invList.length} inverters · IEC 61724`:`· ${invList[0].split('INV ')[1]} · IEC 61724`;
+  const prVals=ts.dates.map((_,i)=>{const e=ts.expected_kwh[i]||0;return e<5?null:Math.min(ts.actual_kwh[i]/e,1.1);});
+  const validPr=prVals.filter(v=>v!==null);
+  const avgPr=validPr.reduce((s,v)=>s+v,0)/validPr.length;
+  const incidentDays=new Set(incs.map(i=>i.start));
+  $('dp-stats').innerHTML=`
+    <div class="stat-chip"><div class="stat-label">Average PR</div><div class="stat-val">${avgPr.toFixed(3)}</div></div>
+    <div class="stat-chip"><div class="stat-label">Curtailed Days</div><div class="stat-val">${ts.curtailed.filter(Boolean).length}</div></div>
+    <div class="stat-chip"><div class="stat-label">Below 0.75 EPC Floor</div><div class="stat-val" style="color:#FE5102">${prVals.filter(v=>v!==null&&v<0.75).length} d</div></div>
+    <div class="stat-chip"><div class="stat-label">Above 0.85 Target</div><div class="stat-val" style="color:#4ade80">${prVals.filter(v=>v!==null&&v>0.85).length} d</div></div>`;
+
+  // Daily PR scatter
+  const VW=600,VH=220,PL=34,PR=24,PT=12,PB=28,PW=VW-PL-PR,PH=VH-PT-PB,Y_MIN=0.3,Y_MAX=1.05;
+  const toX=i=>PL+i/(ts.dates.length-1)*PW;
+  const toY=v=>PT+PH*(1-(v-Y_MIN)/(Y_MAX-Y_MIN));
+  let s=svgOpen(VW,VH);
+  [0.4,0.5,0.6,0.7,0.75,0.8,0.85,0.9,1.0].forEach(v=>{
+    if(v<Y_MIN||v>Y_MAX)return;
+    const y=toY(v).toFixed(1);
+    const key=v===0.75||v===0.85;
+    s+=`<line x1="${PL}" y1="${y}" x2="${VW-PR}" y2="${y}" stroke="${key?'#484848':'#252525'}" stroke-width="${key?1.5:1}" stroke-dasharray="${key?'6,4':'3,5'}"/>`;
+    if(key)s+=`<text x="${VW-PR+3}" y="${y}" dominant-baseline="middle" font-family="Space Mono,monospace" font-size="8" fill="${v===0.75?'#FE5102':'#4ade80'}">${v.toFixed(2)}</text>`;
+    s+=`<text x="${PL-3}" y="${y}" text-anchor="end" dominant-baseline="middle" font-family="Space Mono,monospace" font-size="9" fill="#555">${v.toFixed(1)}</text>`;
+  });
+  // dots — healthy then curtailed then flagged
+  ['healthy','curtailed','flagged'].forEach(layer=>{
+    ts.dates.forEach((d,i)=>{
+      const v=prVals[i];if(v===null)return;
+      const isCurt=ts.curtailed[i],isFlagged=incidentDays.has(d);
+      if(layer==='healthy'&&(isCurt||isFlagged))return;
+      if(layer==='curtailed'&&(!isCurt||isFlagged))return;
+      if(layer==='flagged'&&!isFlagged)return;
+      const cx=toX(i).toFixed(1),cy=toY(v).toFixed(1);
+      const r=isFlagged?4:2.5,fill=isFlagged?'#FE5102':isCurt?'#505050':'#FFFAEE',op=isFlagged?1:isCurt?0.7:0.45;
+      s+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" opacity="${op}"/>`;
+    });
+  });
+  [0,2,4,6,8,10].forEach(mi=>{
+    const idx=ts.dates.findIndex(d=>+d.slice(5,7)-1===mi);
+    if(idx>=0)s+=`<text x="${toX(idx).toFixed(1)}" y="${VH-7}" text-anchor="middle" font-family="Space Mono,monospace" font-size="9" fill="#555">${MN[mi].slice(0,3)}</text>`;
+  });
+  $('dp-daily').innerHTML=s+svgClose();
+
+  // Monthly avg PR
+  const VH2=180,PL2=34,PR2=8,PT2=12,PB2=28,PW2=VW-PL2-PR2,PH2=VH2-PT2-PB2,Y2MIN=0.5,Y2MAX=1.0;
+  const toY2=v=>PT2+PH2*(1-(Math.max(Y2MIN,Math.min(Y2MAX,v))-Y2MIN)/(Y2MAX-Y2MIN));
+  let s2=svgOpen(VW,VH2);
+  [0.6,0.7,0.75,0.8,0.9,1.0].forEach(v=>{
+    const y=toY2(v).toFixed(1);
+    const key=v===0.75;
+    s2+=`<line x1="${PL2}" y1="${y}" x2="${VW-PR2}" y2="${y}" stroke="${key?'#484848':'#252525'}" stroke-width="${key?1.5:1}" stroke-dasharray="${key?'6,4':'3,5'}"/>`;
+    s2+=`<text x="${PL2-3}" y="${y}" text-anchor="end" dominant-baseline="middle" font-family="Space Mono,monospace" font-size="9" fill="#555">${v.toFixed(2)}</text>`;
+  });
+  if(isAll) {
+    $('dp-monthly-title').textContent='Per-Inverter Average PR';
+    const GW=PW2/allTs.length,BW=GW-12;
+    allTs.forEach((t,gi)=>{
+      const pArr=t.dates.map((_,i)=>{const e=t.expected_kwh[i]||0;return e<5?null:Math.min(t.actual_kwh[i]/e,1.1);}).filter(v=>v!==null);
+      const avg=pArr.reduce((s,v)=>s+v,0)/pArr.length;
+      const barH=PH2*(Math.max(Y2MIN,Math.min(Y2MAX,avg))-Y2MIN)/(Y2MAX-Y2MIN);
+      const bx=(PL2+gi*GW+(GW-BW)/2).toFixed(1),by=(PT2+PH2-barH).toFixed(1);
+      s2+=`<rect x="${bx}" y="${by}" width="${BW.toFixed(1)}" height="${barH.toFixed(1)}" fill="#FE5102" rx="3" opacity="0.85"/>`;
+      s2+=`<text x="${(PL2+(gi+0.5)*GW).toFixed(1)}" y="${VH2-8}" text-anchor="middle" font-family="Space Mono,monospace" font-size="9" fill="#555">#${gi+1}</text>`;
+      s2+=`<text x="${(PL2+(gi+0.5)*GW).toFixed(1)}" y="${(parseFloat(by)-5).toFixed(1)}" text-anchor="middle" font-family="Space Mono,monospace" font-size="8.5" fill="#FFFAEE">${avg.toFixed(2)}</text>`;
+    });
+  } else {
+    $('dp-monthly-title').textContent='Monthly Average PR';
+    const GW=PW2/12,BW=GW-8;
+    MN.forEach((_,mi)=>{
+      const idxs=ts.dates.reduce((acc,d,i)=>{if(+d.slice(5,7)-1===mi)acc.push(i);return acc;},[]);
+      const vals=idxs.map(i=>prVals[i]).filter(v=>v!==null);
+      if(!vals.length)return;
+      const avg=vals.reduce((s,v)=>s+v,0)/vals.length;
+      const barH=PH2*(Math.max(Y2MIN,Math.min(Y2MAX,avg))-Y2MIN)/(Y2MAX-Y2MIN);
+      const bx=(PL2+mi*GW+(GW-BW)/2).toFixed(1),by=(PT2+PH2-barH).toFixed(1);
+      s2+=`<rect x="${bx}" y="${by}" width="${BW.toFixed(1)}" height="${barH.toFixed(1)}" fill="#FE5102" rx="3" opacity="0.85"/>`;
+      s2+=`<text x="${(PL2+(mi+0.5)*GW).toFixed(1)}" y="${VH2-8}" text-anchor="middle" font-family="Space Mono,monospace" font-size="9" fill="#555">${MN[mi].slice(0,1)}</text>`;
+    });
+  }
+  $('dp-monthly').innerHTML=s2+svgClose();
+}
+
+// ── fleet health helpers ──────────────────────────────────────
+const H_COLOR = {healthy:'#4ade80', offline:'#ef4444'};
+const H_LABEL = {healthy:'Online',   offline:'Offline'};
+
+function invHealth(t) {
+  const n=t.dates.length, start=Math.max(0,n-14);
+  const act=t.actual_kwh.slice(start), exp=t.expected_kwh.slice(start), curt=t.curtailed.slice(start);
+  const hasOutage=act.some((v,i)=>exp[i]>5&&v<1&&!curt[i]);
+  const prDays=act.map((v,i)=>exp[i]<5||curt[i]?null:v/exp[i]).filter(v=>v!==null);
+  const avgPr=prDays.length?prDays.reduce((s,v)=>s+v,0)/prDays.length:1;
+  if(hasOutage) return {status:'offline', avgPr,
+    reason:'Zero AC output on non-curtailed day with irradiation present — suspected equipment outage'};
+  return {status:'healthy', avgPr,
+    reason:`14-day avg PR ${avgPr.toFixed(2)} — no outage detected`};
+}
+
+// compact overview card — just dots + summary
+function renderFleetHealth(invList, health, allTs) {
+  const nH=health.filter(h=>h.status==='healthy').length;
+  const nO=health.filter(h=>h.status==='offline').length;
+  $('fleet-n-healthy').textContent=nH;
+  $('fleet-n-offline').textContent=nO;
+
+  const wrap=$('fleet-health-dots'); wrap.innerHTML='';
+  invList.forEach((inv,gi)=>{
+    const {status}=health[gi], c=H_COLOR[status], short=inv.replace('INV 01.01.00','#');
+    const col=el('div');
+    col.style.cssText='display:flex;flex-direction:column;align-items:center;gap:8px';
+    col.innerHTML=`
+      <div style="width:12px;height:12px;border-radius:50%;background:${c};box-shadow:0 0 8px ${c}66"></div>
+      <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--dim2)">${short}</div>`;
+    wrap.appendChild(col);
+  });
+}
+
+// full detail page — per-inverter rows with PR + reason + MWh
+function renderDetailHealth() {
+  const {allTs, invList, isAll}=LAST;
+  $('dh-inv').textContent=isAll?`· ${invList.length} inverters`:`· ${invList[0].split('INV ')[1]}`;
+  const health=allTs.map(invHealth);
+  const nH=health.filter(h=>h.status==='healthy').length;
+  const nO=health.filter(h=>h.status==='offline').length;
+  $('dh-stats').innerHTML=`
+    <div class="stat-chip"><div class="stat-label">Online</div><div class="stat-val" style="color:#4ade80">${nH}</div></div>
+    <div class="stat-chip"><div class="stat-label">Offline</div><div class="stat-val" style="color:#ef4444">${nO}</div></div>
+    <div class="stat-chip"><div class="stat-label">Total</div><div class="stat-val">${invList.length}</div></div>`;
+
+  const wrap=$('dh-rows'); wrap.innerHTML='';
+  invList.forEach((inv,gi)=>{
+    const {status, reason, avgPr}=health[gi], t=allTs[gi];
+    const totalMwh=(t.actual_kwh.reduce((s,v)=>s+v,0)/1000).toFixed(1);
+    const curtDays=t.curtailed.filter(Boolean).length;
+    const c=H_COLOR[status], short=inv.replace('INV 01.01.00','#');
+
+    const row=el('div');
+    row.style.cssText='padding:14px 16px;background:#FFFFFF05;border-radius:12px;border:1px solid #FFFFFF09;display:flex;flex-direction:column;gap:10px;';
+    row.innerHTML=`
+      <div style="display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:12px;height:12px;border-radius:50%;background:${c};box-shadow:0 0 8px ${c}55;flex-shrink:0"></div>
+          <div>
+            <div style="font-family:'Space Mono',monospace;font-size:12px;font-weight:600;color:var(--text)">${short}</div>
+            <div style="font-size:11px;color:var(--dim2);margin-top:1px">${inv}</div>
+          </div>
+        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:11px;color:${c};text-transform:uppercase;letter-spacing:.5px">${H_LABEL[status]}</div>
+        <div style="display:flex;gap:24px;text-align:right">
+          <div><div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--dim2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">PR 14d avg</div>
+               <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--text)">${avgPr.toFixed(2)}</div></div>
+          <div><div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--dim2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">MWh 2023</div>
+               <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--text)">${totalMwh}</div></div>
+          <div><div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--dim2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Curtailed d</div>
+               <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--text)">${curtDays}</div></div>
+        </div>
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:10px;color:${status==='healthy'?'var(--dim)':c};letter-spacing:.3px;padding:6px 10px;background:${c}11;border-radius:6px;border-left:2px solid ${c}">
+        ${reason}
+      </div>`;
+    wrap.appendChild(row);
+  });
+}
+
+// ── AgentOps mock traces ──────────────────────────────────────
+function renderAgentOps() {
+  const incs = LAST ? LAST.incs : [];
+  const pending = incs.filter(i => i.status === 'pending');
+  const totalEur = incs.reduce((s, i) => s + (i.eur_impact || 0), 0);
+
+  // pipeline flow node values
+  const windows = incs.length;
+  const routes = {dispatch:0, claim:0, log:0};
+  incs.forEach(i => { const r = i.route?.route; if (r) routes[r] = (routes[r]||0)+1; });
+
+  if ($('ag-total')) $('ag-total').textContent = windows;
+  if ($('ag-eur'))   $('ag-eur').innerHTML = `${Math.round(totalEur)}<small style="font-size:13px;font-weight:400"> €</small>`;
+  if ($('ag-pending')) $('ag-pending').textContent = pending.length;
+
+  if ($('ps-windows')) $('ps-windows').textContent = `${windows} windows`;
+  if ($('ps-eur'))     $('ps-eur').textContent = `€ ${Math.round(totalEur)} impact`;
+  if ($('ps-routes'))  $('ps-routes').textContent = `${routes.dispatch||0}d · ${routes.claim||0}c · ${routes.log||0}l`;
+  if ($('ps-drafts'))  $('ps-drafts').textContent = `${pending.length} pending`;
+  if ($('ps-pending')) $('ps-pending').textContent = `${pending.length} awaiting`;
+
+  // agent card badges
+  if ($('a-triage')) $('a-triage').textContent = `${windows} windows`;
+  if ($('a-impact')) $('a-impact').textContent = `€ ${Math.round(totalEur)} priced`;
+  if ($('a-drafts')) $('a-drafts').textContent = `${pending.length} pending approval`;
+
+  // incident trace cards
+  const tracesWrap = $('ag-traces');
+  if (tracesWrap) {
+    tracesWrap.innerHTML = '';
+    if ($('ag-trace-count')) $('ag-trace-count').textContent = `${incs.length} incidents`;
+    incs.slice(0, 8).forEach(inc => {
+      const cls  = inc.classification === 'fault' ? 'b-fault' : inc.classification === 'curtailment' ? 'b-curt' : 'b-grid';
+      const rc   = inc.route?.route || '';
+      const rcCol = rc==='dispatch' ? 'var(--error)' : rc==='claim' ? 'var(--success)' : 'var(--dim)';
+      const d = el('div','trace-card');
+      d.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <span>
+            <span class="badge ${cls}">${inc.subtype||inc.classification}</span>
+            <span style="color:var(--dim);font-size:12px;margin-left:8px">${inc.start} → ${inc.end} · ${inc.days}d · ${inc.inverter?.split(' ').slice(-1)[0]||'—'}</span>
+          </span>
+          <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--accent);font-size:14px">${inc.eur_impact ? '€ '+Math.round(inc.eur_impact) : '—'}</span>
+        </div>
+        <div class="trace-steps">
+          <span class="trace-step ts-triage">① Triage<br><span style="color:var(--dim2)">${inc.subtype||'—'}</span></span>
+          <span class="trace-arrow">›</span>
+          <span class="trace-step ts-impact">② Impact<br><span style="color:var(--dim2)">${inc.lost_kwh ? Math.round(inc.lost_kwh)+' kWh' : '—'}</span></span>
+          <span class="trace-arrow">›</span>
+          <span class="trace-step ts-orch">③ Orch<br><span style="color:${rcCol}">${rc||'—'}</span></span>
+          <span class="trace-arrow">›</span>
+          <span class="trace-step ts-drafter">④ Draft<br><span style="color:var(--dim2)">${inc.draft ? 'ready' : 'n/a'}</span></span>
+          <span class="trace-arrow">›</span>
+          <span class="trace-step ts-rag">⑤ RAG<br><span style="color:var(--dim2)">${inc.compliance_note ? 'cited' : '—'}</span></span>
+          <span class="trace-arrow">›</span>
+          <span class="trace-step ts-gate">⑥ Gate<br><span style="color:${inc.status==='pending'?'var(--accent)':'var(--success)'}">${inc.status}</span></span>
+        </div>
+        ${inc.compliance_note ? `<div style="font-size:11.5px;color:var(--dim2);border-left:2px solid #FE510233;padding-left:8px;margin-top:8px;line-height:1.5">${inc.compliance_note.slice(0,180)}…</div>` : ''}`;
+      tracesWrap.appendChild(d);
+    });
+    if (!incs.length) {
+      tracesWrap.innerHTML = '<div class="panel" style="color:var(--dim)">No incidents in current pipeline run.</div>';
+    }
+  }
+
+  // agent timing bars
+  const AGENTS = [
+    {name:'Triage',        ms:1840, calls:0, desc:'PR cascade · ML-predicted reference PR · 365-day window scan'},
+    {name:'Impact',        ms:310,  calls:0, desc:'lost kWh × per-inverter FiT · ML API expected baseline'},
+    {name:'Orchestrator',  ms:680,  calls:1, desc:'LLM routing · 1 call · dispatch / claim / log'},
+    {name:'Drafter',       ms:920,  calls:1, desc:'work orders + EEG §15 claims · 1 call · 1,100 tok'},
+    {name:'RAG Compliance',ms:450,  calls:1, desc:'regulation chunks retrieval · EEG · NIS2 · EU AI Act'},
+  ];
+  const maxMs = Math.max(...AGENTS.map(a => a.ms));
+  const wrap = $('ao-timing'); if (!wrap) return; wrap.innerHTML = '';
+  AGENTS.forEach(a => {
+    const pct = (a.ms / maxMs * 100).toFixed(1);
+    const row = el('div');
+    row.style.cssText = 'display:grid;grid-template-columns:140px 1fr 60px;gap:12px;align-items:center';
+    row.innerHTML = `
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600">${a.name}</div>
+      <div style="position:relative;height:8px;background:#FFFFFF08;border-radius:4px;overflow:hidden">
+        <div style="position:absolute;left:0;top:0;height:100%;width:${pct}%;background:${a.calls>0?'#FE5102':'#484848'};border-radius:4px;transition:width .4s"></div>
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--dim2);text-align:right">${a.ms}ms</div>`;
+    wrap.appendChild(row);
+    const descRow = el('div');
+    descRow.style.cssText = 'display:grid;grid-template-columns:140px 1fr;gap:12px;margin-top:-2px;margin-bottom:6px';
+    descRow.innerHTML = `<div></div><div style="font-size:11px;color:var(--dim2)">${a.desc}${a.calls > 0 ? ' · <span style="color:#FE510299">LLM</span>' : ''}</div>`;
+    wrap.appendChild(descRow);
+  });
+}
+
+// ── pipeline demo animation ───────────────────────────────────
+const _sleep = ms => new Promise(r => setTimeout(r, ms));
+async function runPipelineDemo() {
+  const btn = $('demo-run-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⟳ Running…'; }
+
+  const NODES = ['pn-scada','pn-triage','pn-impact','pn-orch','pn-draft','pn-rag','pn-gate'];
+  const ARRS  = ['pa-1','pa-2','pa-3','pa-4','pa-5','pa-6'];
+  const MSGS  = [
+    '5-min SCADA telemetry ingested · PR computed from IEC 61724 formula',
+    'PR cascade: predicted vs actual · 3 windows flagged · string_fault + curtailment detected',
+    'Lost kWh quantified · FiT applied · € 21.7 impact priced per inverter',
+    'LLM routes: 1 dispatch (truck roll) · 2 claim (EEG §15) · 1 log',
+    'Work order drafted for INV 002 · EEG §15 compensation letter generated',
+    'EEG §15 cited · NIS2 reporting threshold: not reached · EU AI Act: advisory posture confirmed',
+    'All drafts in approval queue · human operator review required before any action',
+  ];
+
+  // reset
+  NODES.forEach(id => { const n=$( id); if(n){n.classList.remove('pn-active','pn-done');} });
+  ARRS.forEach(id  => { const a=$( id); if(a) a.querySelector('line,polygon') && setArrColor(a, 'var(--border)'); });
+
+  // clear trace progress indicator
+  const tracesWrap = $('ag-traces');
+  const demoCard = el('div','panel');
+  demoCard.style.cssText = 'margin-bottom:12px;border-color:#FE510255';
+  demoCard.innerHTML = '<div id="demo-log" style="font-family:Space Mono,monospace;font-size:11px;color:var(--accent);letter-spacing:.5px;min-height:40px"></div>';
+  if (tracesWrap) tracesWrap.prepend(demoCard);
+
+  for (let i = 0; i < NODES.length; i++) {
+    const node = $(NODES[i]); if (!node) continue;
+    node.classList.add('pn-active');
+    if (i > 0) setArrActive($(ARRS[i-1]));
+    const log = $('demo-log');
+    if (log) log.textContent = `[${i+1}/7] ${MSGS[i]}`;
+    await _sleep(650);
+    node.classList.remove('pn-active');
+    node.classList.add('pn-done');
+  }
+
+  const log = $('demo-log');
+  if (log) log.innerHTML = '<span style="color:#07CB9C">✓ Pipeline complete · 9 incidents · € 48.3 total impact · awaiting human approval</span>';
+  if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6V2z"/></svg> Run Demo'; }
+}
+
+function setArrActive(el) {
+  if (!el) return;
+  const line = el.querySelector('line'); const poly = el.querySelector('polygon');
+  if (line) { line.style.stroke = 'var(--accent)'; }
+  if (poly)  { poly.style.fill  = 'var(--accent)'; }
+}
+function setArrColor(el, col) {
+  if (!el) return;
+  const line = el.querySelector('line'); const poly = el.querySelector('polygon');
+  if (line) { line.style.stroke = col; }
+  if (poly)  { poly.style.fill  = col; }
+}
+
+function setQFilter(f, btn) {
+  QUEUE_FILTER = f;
+  SELECTED_INC = null;
+  document.querySelectorAll('.q-filter').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if ($('queue-detail-empty')) $('queue-detail-empty').style.display = 'flex';
+  if ($('queue-detail-content')) { $('queue-detail-content').style.display = 'none'; $('queue-detail-content').innerHTML = ''; }
+  if (LAST) renderQueue(LAST.incs);
+}
+
+function renderQueue(incs) {
+  const sorted = incs.slice().sort((a,b)=>b.eur_impact-a.eur_impact);
+  const filtered = sorted.filter(i => {
+    if (QUEUE_FILTER === 'pending')  return i.status === 'pending';
+    if (QUEUE_FILTER === 'dispatch') return i.route?.route === 'dispatch';
+    if (QUEUE_FILTER === 'claim')    return i.route?.route === 'claim';
+    if (QUEUE_FILTER === 'monitor')  return i.route?.route === 'monitor';
+    return true;
+  });
+  const pending = filtered.filter(i=>i.status==='pending').length;
+  if ($('queue-count')) $('queue-count').textContent =
+    `${filtered.length} shown · ${pending} pending`;
+
+  const dq = $('dq'); dq.innerHTML = '';
+  filtered.forEach(i => {
+    const rc       = i.route?.route || 'log';
+    const rcDot    = rc==='dispatch'?'🔴':rc==='claim'?'🟢':rc==='monitor'?'🟡':'⚫';
+    const prioColor = {Critical:'#ef4444',High:'#FE5102',Medium:'#f59e0b',Low:'var(--dim2)'}[i.priority]||'var(--dim2)';
+    const eurText  = i.eur_impact ? `€ ${Math.round(i.eur_impact).toLocaleString()}` : 'cos φ';
+    const isActive = SELECTED_INC && SELECTED_INC.id === i.id;
+
+    const row = el('div', 'qi' + (i.status!=='pending'?' qi-done':'') + (isActive?' qi-active':''));
+    row.innerHTML = `
+      <div class="qi-left">
+        <div class="qi-subtype">${rcDot} &nbsp;${i.subtype||i.classification}</div>
+        <div class="qi-meta">${i.inverter} &nbsp;·&nbsp; ${i.start} → ${i.end}</div>
+      </div>
+      <div class="qi-right">
+        <div class="qi-eur">${eurText}</div>
+        <div class="qi-prio" style="color:${prioColor}">▲ ${i.priority||'—'}</div>
+      </div>`;
+    row.onclick = () => selectInc(i, row);
+    dq.appendChild(row);
+  });
+
+  // keep detail panel in sync if selected item is still in filtered list
+  if (SELECTED_INC) {
+    const still = filtered.find(i => i.id === SELECTED_INC.id);
+    if (still) renderQueueDetail(still);
+    else clearQueueDetail();
+  }
+}
+
+function selectInc(i, row) {
+  SELECTED_INC = i;
+  document.querySelectorAll('.qi').forEach(r => r.classList.remove('qi-active'));
+  row.classList.add('qi-active');
+  renderQueueDetail(i);
+}
+
+function clearQueueDetail() {
+  SELECTED_INC = null;
+  $('queue-detail-empty').style.display = 'flex';
+  $('queue-detail-content').style.display = 'none';
+  $('queue-detail-content').innerHTML = '';
+}
+
+function renderQueueDetail(i) {
+  const rc       = i.route?.route || '';
+  const rcColor  = rc==='dispatch'?'var(--error)':rc==='claim'?'var(--success)':'var(--accent)';
+  const prioClass = {Critical:'prio-critical',High:'prio-high',Medium:'prio-medium',Low:'prio-low'}[i.priority||'Low']||'prio-low';
+  const eurDisplay = i.eur_impact ? `€ ${Math.round(i.eur_impact).toLocaleString()}` : 'cos φ';
+  const eurDay   = i.days ? `€ ${Math.round(i.eur_impact/i.days)}/day` : '';
+  const statusLabel = {pending:'Acknowledged',approved:'Dispatched',rejected:'Closed — rejected'}[i.status] || i.status || 'Acknowledged';
+  const cls = i.classification==='fault'?'b-fault':i.classification==='curtailment'?'b-curt':'b-grid';
+
+  $('queue-detail-empty').style.display = 'none';
+  const panel = $('queue-detail-content');
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <!-- §1 HEADER & GENERAL INFORMATION -->
+    <div class="qc-header">
+      <div class="qc-header-left">
+        <div>
+          <span class="badge ${cls}">${i.subtype||i.classification}</span>
+          &nbsp;<span class="badge" style="color:${rcColor};border:1px solid ${rcColor}44">${rc||'log'}</span>
+        </div>
+        <div class="qc-tid">
+          Ticket&nbsp;${i.id||'—'} &nbsp;·&nbsp;
+          ${i.plant_name||'Enerparc Solar Plant'} &nbsp;·&nbsp;
+          ${i.plant_capacity_mw ? i.plant_capacity_mw+' MW (AC)' : '1.897 MW (AC)'}
+        </div>
+        <div style="font-size:11px;color:var(--dim2)">
+          📍 ${i.location||'Bavaria, Germany'} &nbsp;·&nbsp;
+          Reporter: ${i.reporter||'Enerparc Pulse SCADA Monitor'}
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div class="eur">${eurDisplay}</div>
+        ${eurDay?`<div style="font-size:11px;color:var(--dim);margin-top:3px">${eurDay}</div>`:''}
+      </div>
+    </div>
+
+    <!-- §2 CLASSIFICATION & PRIORITY -->
+    <div class="qc-section">
+      <div class="qc-sl">Classification &amp; Priority</div>
+      <div class="qc-grid3">
+        <div><div class="qc-label">Category</div><div class="qc-value">${i.asset_category||'Inverter'}</div></div>
+        <div><div class="qc-label">Ticket Type</div><div class="qc-value" style="font-size:12px">${i.ticket_type||'Corrective Maintenance'}</div></div>
+        <div><div class="qc-label">Priority</div><div class="${prioClass}">▲ ${i.priority||'—'}</div></div>
+      </div>
+    </div>
+
+    <!-- §3 EVENT DETAILS -->
+    <div class="qc-section">
+      <div class="qc-sl">Event Details</div>
+      <div class="qc-grid2">
+        <div><div class="qc-label">Timestamp of Failure</div>
+          <div class="qc-value" style="font-family:'Space Mono',monospace;font-size:12px">${i.failure_timestamp||i.start+' 00:00 UTC'}</div></div>
+        <div><div class="qc-label">Duration</div>
+          <div class="qc-value" style="font-family:'Space Mono',monospace;font-size:12px">${i.start} → ${i.end} (${i.days}d)</div></div>
+      </div>
+      <div style="margin-top:10px"><div class="qc-label">Status</div>
+        <div class="qc-value" style="font-size:12px">${statusLabel} · ${i.inverter}</div></div>
+      <div class="qc-subject">${i.subject||''}</div>
+      <div class="qc-desc">${i.reasoning||''}</div>
+    </div>
+
+    <!-- §4 FINANCIAL & PRODUCTION IMPACT -->
+    <div class="qc-section">
+      <div class="qc-sl">Financial &amp; Production Impact</div>
+      <div class="qc-grid3">
+        <div><div class="qc-label">Production Loss</div>
+          <div class="qc-value">${Math.round(i.lost_kwh||0).toLocaleString()} kWh</div></div>
+        <div><div class="qc-label">Revenue Impact</div>
+          <div class="eur" style="font-size:14px">${eurDisplay}</div></div>
+        <div><div class="qc-label">Inverter Availability</div>
+          <div class="qc-value" style="font-size:12px">${i.availability||'—'}</div></div>
+      </div>
+      ${i.route?`
+      <div class="route-line" style="margin-top:10px;color:${rcColor}">
+        ⚖ ${rc} · ${Math.round((i.route.confidence||0)*100)}% confidence
+        · <span style="color:var(--dim)">${i.route.note||''}</span>
+        <span style="color:var(--dim2);font-size:10px"> (${i.route.by||''})</span>
+      </div>`:''}
+      ${i.compliance_note?`<div class="compliance-line">📋 ${i.compliance_note}</div>`:''}
+    </div>
+
+    <!-- §5 RESOLUTION & EXECUTION -->
+    <div class="qc-section">
+      <div class="qc-sl">Resolution &amp; Execution</div>
+      <div class="qc-grid2">
+        <div><div class="qc-label">Assigned To</div>
+          <div class="qc-value" style="font-size:12px">${i.assigned_to||'—'}</div></div>
+        <div><div class="qc-label">Date &amp; Time Resolved</div>
+          <div class="qc-value" style="font-size:12px;color:var(--dim)">${i.resolved_at||'—'}</div></div>
+      </div>
+      ${i.parts_hint?`<div style="margin-top:8px"><div class="qc-label">Parts / Actions</div>
+        <div class="qc-value" style="font-size:12px">${i.parts_hint}</div></div>`:''}
+      ${i.similar_tickets?.length?`<div style="margin-top:10px"><div class="qc-label">Similar Historical Tickets</div>
+        ${i.similar_tickets.map(t=>`<div class="qc-similar-item">↳ ${t}</div>`).join('')}</div>`:''}
+      <div style="margin-top:8px"><div class="qc-label">Resolution Notes</div>
+        <div class="qc-value" style="font-size:12px;color:var(--dim)">${i.resolution_notes||'Pending technician report.'}</div></div>
+      <div style="margin-top:6px"><div class="qc-label">Sign-off / Verification</div>
+        <div class="qc-value" style="font-size:12px;color:var(--dim)">${i.sign_off||'—'}</div></div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="qc-actions">
+      ${i.status==='pending'
+        ?`<button class="btn approve" onclick="decide('${i.id}','approved')">✓ Approve &amp; Dispatch</button>
+          <button class="btn reject"  onclick="decide('${i.id}','rejected')">✗ Reject</button>`
+        :`<span style="color:var(--success);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase">${statusLabel}</span>`
+      }
+      <button class="btn" style="background:transparent;border:1px solid var(--accent);color:var(--accent)"
+        onclick="discussTicket('${i.id}', ${JSON.stringify((i.subject||'this incident')).replace(/"/g,'&quot;')})">💬 Know more</button>
+    </div>`;
+}
+
+// ── tickets table (real Tickets.xlsx, first 5 inverters + Plant) ──
+const CATEGORY_COLOR = {
+  'Strangausfall':   'var(--error)',
+  'Kondensatoren defekt': 'var(--error)',
+  'Platinen und mehr defekt': 'var(--error)',
+  'Isolationswerte': 'var(--accent)',
+  'unbekannte Störung': 'var(--accent)',
+  'Fehlerursache konnte nicht ermittelt werden': 'var(--accent)',
+  'Netzstörung':     'var(--success)',
+  'Curtailment':     'var(--success)',
+  'Schnee':          'var(--dim)',
+  'MS-Wartung (intern)': 'var(--dim)',
+};
+async function renderTickets() {
+  const tbody = $('tickets-tbody'); tbody.innerHTML = '';
+  if (!TICKETS_CACHE) {
+    try { TICKETS_CACHE = await (await fetch(`${API}/api/tickets`)).json(); }
+    catch { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--dim)">Failed to load tickets.</td></tr>'; return; }
+  }
+  // filter by current inverter selection (Plant tickets always shown)
+  const tickets = CUR === ALL_KEY
+    ? TICKETS_CACHE
+    : TICKETS_CACHE.filter(t => t.component === CUR || t.component === 'Plant');
+  $('tickets-count').textContent = CUR === ALL_KEY
+    ? `${tickets.length} tickets · all 5 inverters + plant`
+    : `${tickets.length} tickets · ${CUR} + plant`;
+  $('nav-tickets-count').textContent = tickets.length;
+  tickets.forEach(t => {
+    const tr = el('tr');
+    const color = CATEGORY_COLOR[t.category] || 'var(--dim)';
+    let duration = '—';
+    if (t.start && t.end) {
+      const days = Math.round((new Date(t.end)-new Date(t.start))/(1000*86400));
+      duration = days > 0 ? `${days} d` : '< 1 d';
+    }
+    const isPlant = t.component === 'Plant';
+    tr.innerHTML = `
+      <td>
+        <span style="font-family:'Space Mono',monospace;font-size:10px;
+          color:${isPlant?'var(--dim)':'var(--text)'};letter-spacing:.5px">
+          ${t.component}
+        </span>
+        ${isPlant ? '<span style="font-size:10px;color:var(--dim2);margin-left:6px">plant-wide</span>' : ''}
+      </td>
+      <td style="font-size:12.5px;color:var(--dim)">${t.start||'—'}</td>
+      <td style="font-size:12.5px;color:var(--dim)">${t.end||'ongoing'}</td>
+      <td><span class="sub-pill" style="color:${color};background:${color}18">${t.category}</span></td>
+      <td style="font-size:12px;color:var(--dim2)">${duration}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── decide ────────────────────────────────────────────────────
+async function decide(id, decision) {
+  let reason = '';
+  if (decision==='rejected') reason = prompt('Reason (feeds evals):') || '';
+  await fetch(`${API}/api/decide`, {method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({id, decision, reason})});
+  // update local status so list + detail re-render immediately without full reload
+  if (LAST) {
+    const inc = LAST.incs.find(i => i.id === id);
+    if (inc) {
+      inc.status = decision === 'approved' ? 'approved' : 'rejected';
+      renderQueue(LAST.incs);
+      if (SELECTED_INC && SELECTED_INC.id === id) {
+        SELECTED_INC = inc;
+        renderQueueDetail(inc);
+      }
+    }
+  }
+}
+
+// ── PR validation: measured vs ML-predicted (2018) ───────────
+async function loadPRValidation() {
+  const wrap = $('pr-chart'), stats = $('pr-stats');
+  if (!wrap) return;
+  let d;
+  try { d = await (await fetch(`${API}/api/pr_validation`)).json(); }
+  catch { d = { available: false }; }
+
+  if (!d.available || !d.dates?.length) {
+    stats.textContent = '';
+    wrap.innerHTML = `<div style="padding:28px 16px;text-align:center;color:var(--dim);font-size:13px;
+      border:1px dashed var(--border);border-radius:12px">
+      No validation run yet. Run <code style="font-family:'Space Mono',monospace;color:var(--accent)">python pipeline_2018.py</code> to populate this chart.</div>`;
+    return;
+  }
+
+  const pct = v => `${v>=0?'':''}${(v*100).toFixed(1)}%`;
+  stats.innerHTML = `MAE ${(d.mae*100).toFixed(1)}% · RMSE ${((d.rmse??0)*100).toFixed(1)}% · `
+    + `R² ${(d.r2??0).toFixed(3)} · bias ${d.bias>=0?'+':''}${(d.bias*100).toFixed(1)}% `
+    + `· ${d.n_days}d · ${d.n_inverters} inv · ${d.ml_backend}`;
+
+  // ── SVG two-line chart ──────────────────────────────────────
+  const W = wrap.clientWidth || 880, H = 200, P = {l:34, r:10, t:10, b:22};
+  const n = d.dates.length;
+  const yMin = 0, yMax = 1;                 // PR is 0..1
+  const xa = i => P.l + (W - P.l - P.r) * (n<=1 ? 0 : i/(n-1));
+  const ya = v => P.t + (H - P.t - P.b) * (1 - (v - yMin)/(yMax - yMin));
+  const path = arr => arr.map((v,i) => `${i?'L':'M'}${xa(i).toFixed(1)},${ya(v).toFixed(1)}`).join(' ');
+
+  // gridlines + labels at 0.25/0.5/0.75/1.0
+  let grid = '';
+  [0.25,0.5,0.75,1.0].forEach(g => {
+    const y = ya(g).toFixed(1);
+    grid += `<line x1="${P.l}" y1="${y}" x2="${W-P.r}" y2="${y}" stroke="#FFFFFF10" stroke-width="1"/>`
+         +  `<text x="${P.l-6}" y="${(+y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--dim2)" font-family="'Space Mono',monospace">${g.toFixed(2)}</text>`;
+  });
+  // x labels: first, middle, last date
+  const xticks = [0, Math.floor(n/2), n-1].map(i =>
+    `<text x="${xa(i).toFixed(1)}" y="${H-6}" text-anchor="middle" font-size="9" fill="var(--dim2)" font-family="'Space Mono',monospace">${d.dates[i]}</text>`).join('');
+
+  wrap.style.position = 'relative';
+  wrap.innerHTML = `<svg id="pr-svg" viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" style="overflow:visible;display:block">
+    ${grid}${xticks}
+    <path d="${path(d.predicted_pr)}" fill="none" stroke="var(--success)" stroke-width="1.6" stroke-dasharray="5 4" opacity="0.9"/>
+    <path d="${path(d.actual_pr)}"    fill="none" stroke="var(--accent)"  stroke-width="1.8"/>
+    <g id="pr-hover" style="display:none">
+      <line id="pr-hline" y1="${P.t}" y2="${H-P.b}" stroke="var(--dim2)" stroke-width="1" stroke-dasharray="3 3"/>
+      <circle id="pr-dot-a" r="3.5" fill="var(--accent)"  stroke="#191919" stroke-width="1"/>
+      <circle id="pr-dot-p" r="3.5" fill="var(--success)" stroke="#191919" stroke-width="1"/>
+    </g>
+  </svg>
+  <div id="pr-tip" style="position:absolute;display:none;pointer-events:none;z-index:5;
+       background:#191919;border:1px solid var(--accent);border-radius:8px;padding:7px 9px;
+       font-family:'Space Mono',monospace;font-size:10.5px;line-height:1.5;color:var(--vanilla,#FFFAEE);
+       box-shadow:0 4px 14px #00000055;white-space:nowrap;transform:translateX(-50%)"></div>`;
+
+  // ── hover interaction ───────────────────────────────────────
+  const svg = $('pr-svg'), hg = $('pr-hover'), tip = $('pr-tip');
+  const hline = $('pr-hline'), dotA = $('pr-dot-a'), dotP = $('pr-dot-p');
+  const invs = d.inverters || [];
+  svg.addEventListener('mousemove', ev => {
+    const rect = svg.getBoundingClientRect();
+    const px = ev.clientX - rect.left;
+    let i = Math.round(((px / rect.width) * W - P.l) / (W - P.l - P.r) * (n - 1));
+    i = Math.max(0, Math.min(n - 1, i));
+    const av = d.actual_pr[i], pv = d.predicted_pr[i], gap = pv - av;
+    const x = xa(i);
+    hg.style.display = '';
+    hline.setAttribute('x1', x); hline.setAttribute('x2', x);
+    dotA.setAttribute('cx', x); dotA.setAttribute('cy', ya(av));
+    dotP.setAttribute('cx', x); dotP.setAttribute('cy', ya(pv));
+    tip.style.display = 'block';
+    const leftPx = (x / W) * rect.width;
+    tip.style.left = Math.max(60, Math.min(rect.width - 60, leftPx)) + 'px';
+    tip.style.top = '4px';
+    tip.style.transform = 'translateX(-50%)';
+    tip.innerHTML =
+      `<b>${d.dates[i]}</b>${invs[i] ? ` · ${invs[i]}` : ''}<br>`
+      + `<span style="color:var(--accent)">● measured</span>&nbsp;&nbsp;${av.toFixed(3)}<br>`
+      + `<span style="color:var(--success)">● predicted</span>&nbsp;${pv.toFixed(3)}<br>`
+      + `<span style="color:var(--dim2)">gap ${gap>=0?'+':''}${gap.toFixed(3)}</span>`;
+  });
+  svg.addEventListener('mouseleave', () => { hg.style.display='none'; tip.style.display='none'; });
+}
+
+// ── chat ─────────────────────────────────────────────────────
+const COMPLIANCE_KB = [
+  { keys:["hi","hello","hey","hallo","guten","good morning","morning","start","what can","help","topics"],
+    ans:"Hello! I'm the Enerparc Pulse compliance assistant — grounded in the regulations we monitor.<br><br>Ask me about: <b>EEG §15</b> curtailment compensation · <b>Redispatch 2.0</b> · <b>§14a EnWG</b> storage dimming · <b>MaStR</b> reporting · <b>NIS2</b> incident notification · <b>EU AI Act</b> advisory posture · <b>IEC 61724</b> performance ratio · <b>string faults</b> · <b>soiling</b> · <b>forecasting</b>." },
+  { keys:["§15","eeg 15","eeg§15","eeg claim","curtailment claim","compensation","entschädigung","einspeisevergütung","how do i claim","when to file","file a claim"],
+    ans:"Under EEG 2023 §15, grid operators must compensate renewable operators for curtailed energy at <b>95% of lost FiT revenue</b>.<br><br>Required documentation:<br>• DV/EVU timestamps (start + end of curtailment)<br>• Irradiation data confirming producible energy<br>• Inverter output before/during/after curtailment<br><br>File within <b>12 months</b> with the Netzbetreiber. Enerparc Pulse routes curtailment events to 'claim' and drafts the letter automatically." },
+  { keys:["curtailment","abregelung","dv signal","evu signal","grid setpoint","grid limit","feed-in limit","what is curtailment"],
+    ans:"Curtailment shows as <b>DV or EVU signal &lt; 100%</b> in SCADA. This is <b>not an equipment fault</b> — must be classified separately.<br><br>Enerparc Pulse detects it at Stage 2 triage when DV/EVU &lt; 100% and PR drop matches the setpoint ratio. Route: <b>claim</b> → EEG §15 compensation letter drafted automatically." },
+  { keys:["redispatch","§13","§14 enwg","regent","market value","marktwert","redispatch 2.0"],
+    ans:"Redispatch 2.0 (§13/§14 EnWG, BNetzA REGENT): Plants ≥ 100 kW must participate.<br><br>• Compensation = <b>market value</b> (Marktwert) of curtailed energy, not the FiT rate<br>• Log every event: start/end timestamp, requested set-point, actual output<br>• Non-compliance: up to <b>€100,000 fine</b><br><br>Different from EEG §15 — use the Marktwert formula for Redispatch claims." },
+  { keys:["§14a","14a","storage","speicher","dimming","smgw","smart meter gateway","controllable"],
+    ans:"§14a EnWG applies to controllable storage and heat pumps. Grid operator may dim charging to max <b>4.2 kW</b>. Operator receives a <b>reduced grid fee</b> in return.<br><br>Enerparc Pulse classifies §14a dimming separately from §13 Redispatch — they arrive via different SMGW command codes. Never merge these in fault logs." },
+  { keys:["mastr","marktstammdaten","annual yield","outage report","meldepflicht","register"],
+    ans:"BNetzA MaStR reporting obligations:<br>① Annual yield → within <b>90 days</b> of year-end<br>② Outages &gt; 72h → within <b>30 days</b> of restoration<br>③ Decommissioning → within <b>4 weeks</b><br><br>Always include the MaStR unit ID on all fault logs and compensation claims." },
+  { keys:["nis2","nis 2","cybersecurity","bsi","incident notification","kritisch","kritis","important entity"],
+    ans:"NIS2 (EU 2022/2555): Energy operators ≥ 200 employees or ≥ €10M turnover = <b>Important Entities</b>.<br><br>Obligations:<br>• BSI <b>early warning within 24h</b> for significant incidents (&gt; 1 MW for &gt; 1h)<br>• Full incident report within <b>72h</b><br><br>Enerparc Pulse timestamps all anomalies for this purpose. Every incident log is audit-ready." },
+  { keys:["eu ai act","ai act","high risk","hochrisiko","human oversight","advisory only","approval gate","human gate"],
+    ans:"EU AI Act Art.6 / Annex III: AI systems in critical infrastructure energy management are <b>HIGH-RISK</b> without human oversight.<br><br>Enerparc Pulse stays advisory-only — every action draft requires human approval before execution. Per incident we log:<br>• Model ID + version<br>• Confidence score<br>• Human decision (approved/rejected)<br>• Timestamp<br><br>This keeps us out of high-risk classification." },
+  { keys:["performance ratio","what is pr","pr formula","iec 61724","leistungsverhältnis","ipr","how is pr calculated"],
+    ans:"IEC 61724-1:2021 definition:<br><b>PR = E_AC / (H_poa / G_STC × P_nom)</b><br><br>• Sustained PR &lt; 0.70 for &gt; 3 days → formal investigation required<br>• Temperature correction: PR_T = PR / (1 + γ × (T_cell − 25°C)), γ ≈ −0.004/°C for mono-Si<br><br>Enerparc Pulse uses a <b>LightGBM ML model</b> to predict the healthy-state PR reference, replacing the fleet-median heuristic." },
+  { keys:["string fault","string","strang","i_dc","dc current","step drop","module failure"],
+    ans:"String faults show as a <b>step-drop in I_DC</b> while U_DC stays at nominal — this distinguishes string loss from total inverter failure (where U_DC collapses to 0).<br><br>Enerparc Pulse Stage 2 triage detects this via: I_DC drop &gt; 15% + U_DC normal → <b>route: dispatch</b> (truck roll + work order generated)." },
+  { keys:["soiling","verschmutzung","dirt","dust","snow","schnee","gradual","drift"],
+    ans:"Soiling = gradual PR drift without current step-changes. Distinguished from string faults by the <b>smooth degradation curve</b> vs. abrupt step-down.<br><br>Snow = PR drops to near-zero with low irradiance, recovers as irradiance rises — classified as weather, not a fault. Enerparc Pulse routes soiling to <b>scheduled maintenance</b>, not emergency dispatch." },
+  { keys:["forecast","prognose","chronos","24h","battery","speicher","tomorrow","predict","energy tomorrow"],
+    ans:"Enerparc Pulse uses <b>Chronos-Bolt</b> (Amazon, deployed AWS Lambda eu-north-1) for 24h probabilistic forecasting with P10/P50/P90 uncertainty bands.<br><br>Battery strategy: charge in cheap midday window, discharge at evening peak — only when the price spread exceeds degradation cost. The forecast is live at the top of the Overview page." },
+  { keys:["solarspitzengesetz","solar peak law","§7a","feed-in limit","new regulation 2024"],
+    ans:"Solarspitzengesetz (Bundestag 2024): New plants ≥ 25 kWp must install certified ripple-control receivers (Rundsteuerempfänger) for grid operator feed-in control. Existing EEG plants under §14a retrofit requirements apply from 2026. Enerparc Pulse tracks DV/EVU compliance per inverter." },
+];
+
+// active ticket the chat is grounded on (null = general compliance mode)
+let ACTIVE_INCIDENT = null;
+// conversation memory — [{role:'user'|'assistant', content}] persisted across reload
+let CHAT_HISTORY = [];
+try { CHAT_HISTORY = JSON.parse(localStorage.getItem('bw_chat') || '[]'); } catch (_) { CHAT_HISTORY = []; }
+function saveChat() { try { localStorage.setItem('bw_chat', JSON.stringify(CHAT_HISTORY.slice(-20))); } catch (_) {} }
+
+// rebuild the chat thread from saved history (called on load)
+function restoreChat() {
+  if (!CHAT_HISTORY.length) return;
+  const msgs = $('chat-msgs');
+  CHAT_HISTORY.forEach(m => {
+    if (m.role === 'user') {
+      const u = el('div','chat-msg user');
+      u.innerHTML = `<div class="chat-bubble">${m.content.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`;
+      msgs.appendChild(u);
+    } else {
+      const b = el('div','chat-msg bot');
+      b.innerHTML = `<div class="chat-sender">Enerparc Pulse RAG</div><div class="chat-bubble">${fmtAnswer(m.content)}</div>`;
+      msgs.appendChild(b);
+    }
+  });
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function fmtAnswer(t) {
+  // backend sends plain prose with \n\n paragraph breaks — render as paragraphs
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return esc(t).split(/\n{2,}/).map(p => `<p style="margin:0 0 8px">${p.replace(/\n/g,'<br>')}</p>`).join('');
+}
+
+// "Know more" on a ticket → ATTACH the incident as chat context; the user asks their own question
+function discussTicket(id, subject) {
+  ACTIVE_INCIDENT = id;
+  nav('chat', document.querySelector('.nav-item[onclick*="chat"]'));
+  const msgs = $('chat-msgs');
+  // single right-aligned chip below the intro; replace if one already exists
+  const old = $('chat-ticket-chip'); if (old) old.remove();
+  const chip = el('div');
+  chip.id = 'chat-ticket-chip';
+  chip.style.cssText = 'align-self:flex-end;display:flex;align-items:center;gap:8px;width:fit-content;'
+    + 'max-width:72%;padding:6px 10px 6px 12px;margin:2px 0;background:#FE51021A;'
+    + "border:1px solid #FE510255;border-radius:999px;font-size:12px;color:var(--accent);"
+    + "font-family:'Space Mono',monospace";
+  chip.innerHTML = `<span style="font-size:11px">📎</span>`
+    + `<span>${id} · ${subject}</span>`
+    + `<span title="Remove ticket" onclick="clearTicket()" style="cursor:pointer;display:inline-flex;`
+    + `align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;`
+    + `background:#FE510233;color:var(--accent);font-size:11px;line-height:1">✕</span>`;
+  msgs.appendChild(chip);
+  msgs.scrollTop = msgs.scrollHeight;
+  $('chat-in').value = '';
+  $('chat-in').focus();
+}
+
+function clearTicket() {
+  ACTIVE_INCIDENT = null;
+  const chip = $('chat-ticket-chip'); if (chip) chip.remove();
+}
+
+// COMPLIANCE_KB kept as client-side fallback only — primary path is /api/chat
+async function chatSend() {
+  const input = $('chat-in'), q = input.value.trim(); if (!q) return;
+  input.value = '';
+  const msgs = $('chat-msgs');
+
+  // user bubble
+  const uMsg = el('div','chat-msg user');
+  uMsg.innerHTML = `<div class="chat-bubble">${q.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`;
+  msgs.appendChild(uMsg);
+
+  // typing indicator
+  const typing = el('div','chat-msg bot');
+  typing.innerHTML = `<div class="chat-sender">Enerparc Pulse RAG</div><div class="chat-bubble" style="color:var(--dim2)">…</div>`;
+  msgs.appendChild(typing);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  let raw = null;      // plain-text answer (for history)
+  let answer = null;   // HTML to render
+
+  // ── primary: backend LLM + RAG (carries incident_id + prior turns) ──
+  try {
+    const body = { query: q, history: CHAT_HISTORY.slice(-10) };
+    if (ACTIVE_INCIDENT) body.incident_id = ACTIVE_INCIDENT;
+    const res = await fetch(`${API}/api/chat`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.answer) { raw = data.answer; answer = fmtAnswer(data.answer); }
+    }
+  } catch (_) { /* fallback below */ }
+
+  // ── fallback: client-side keyword match ─────────────────────
+  if (!answer) {
+    const ql = q.toLowerCase();
+    let bestScore = 0;
+    for (const entry of COMPLIANCE_KB) {
+      const score = entry.keys.reduce((s, k) => s + (ql.includes(k) ? k.length + 1 : 0), 0);
+      if (score > bestScore) { bestScore = score; answer = entry.ans; }
+    }
+    if (!answer) answer = "I'm specialized in solar O&M compliance. Ask me about: <b>EEG §15</b>, <b>Redispatch 2.0</b>, <b>§14a EnWG</b>, <b>MaStR</b>, <b>NIS2</b>, <b>EU AI Act</b>, <b>performance ratio</b>, <b>string faults</b>, or <b>soiling</b>.";
+    raw = answer.replace(/<[^>]+>/g, '');  // strip tags for history
+  }
+
+  // replace typing indicator + commit turn to memory
+  typing.querySelector('.chat-bubble').innerHTML = answer;
+  msgs.scrollTop = msgs.scrollHeight;
+  CHAT_HISTORY.push({ role: 'user', content: q }, { role: 'assistant', content: raw });
+  saveChat();
+}
+$('chat-in').addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); chatSend(); }});
+
+// ── init ─────────────────────────────────────────────────────
+async function init() {
+  try {
+    META = await (await fetch(`${API}/api/inverters`)).json();
+  } catch {
+    $('page-title').innerHTML = '<em style="color:var(--error)">API offline</em>';
+    document.querySelector('.page.active').innerHTML =
+      `<div class="panel"><h2 style="color:var(--error)">Server offline</h2>
+       <p style="color:var(--dim);margin-top:8px">Start: <code style="font-family:monospace">uvicorn app:app --port 8080</code></p></div>`;
+    return;
+  }
+  const sel = $('invsel');
+  // "All Inverters" first
+  const allOpt = el('option'); allOpt.value = ALL_KEY; allOpt.textContent = 'All Inverters';
+  sel.appendChild(allOpt);
+  // divider
+  const sep = el('option'); sep.disabled = true; sep.textContent = '──────────'; sel.appendChild(sep);
+  // individual inverters
+  Object.keys(META).forEach(k => {
+    const o = el('option'); o.value = k; o.textContent = k; sel.appendChild(o);
+  });
+  sel.onchange = () => load(sel.value);
+
+  await load(ALL_KEY);
+
+  loadPRValidation();   // fleet PR: measured vs ML-predicted (2018 validation)
+  restoreChat();        // rebuild prior conversation from memory
+
+  // restore last page across reload
+  try {
+    const saved = localStorage.getItem('bw_page');
+    const btn = saved && document.querySelector(`.nav-item[onclick*="'${saved}'"]`);
+    if (btn && saved !== 'overview') nav(saved, btn);
+  } catch (_) {}
+}
+init();
+</script>
+</body>
+</html>

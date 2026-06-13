@@ -1,0 +1,27 @@
+# ── large datasets — not committed (use organizer datasets locally) ──
+raw_data/
+*.large.csv
+main_monitoring_data.csv
+main_2017.csv
+validation_2018.csv
+raw_validation_2018.csv
+synthetic_eval.csv
+
+# ── python ──
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# ── runtime-generated ──
+out/audit.jsonl
+
+# ── secrets ──
+.env
+*.env
+
+# ── os / editor ──
+.DS_Store
+.idea/
+.vscode/

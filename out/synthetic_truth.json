@@ -1,0 +1,32 @@
+{
+ "SYN_STRING": {
+  "label": "string_fault",
+  "start": "2023-07-01",
+  "end": "2023-12-31"
+ },
+ "SYN_SOIL": {
+  "label": "soiling",
+  "start": "2023-08-01",
+  "end": "2023-12-31"
+ },
+ "SYN_ACFAULT": {
+  "label": "ac_fault",
+  "start": "2023-06-01",
+  "end": "2023-12-31"
+ },
+ "SYN_CURT": {
+  "label": "curtailment",
+  "start": "2023-08-10",
+  "end": "2023-08-11"
+ },
+ "SYN_OUTAGE": {
+  "label": "outage_fault",
+  "start": "2023-09-05",
+  "end": "2023-09-12"
+ },
+ "SYN_SNOW": {
+  "label": "snow",
+  "start": "2023-01-16",
+  "end": "2023-01-19"
+ }
+}

@@ -1,0 +1,32 @@
+{
+ "INV 01.01.001": {
+  "kwp": 30.6,
+  "fit_ct_kwh": 11.6,
+  "year_mwh": 25.2,
+  "plant_factor": 0.8
+ },
+ "INV 01.01.002": {
+  "kwp": 30.6,
+  "fit_ct_kwh": 11.6,
+  "year_mwh": 16.4,
+  "plant_factor": 0.767
+ },
+ "INV 01.01.003": {
+  "kwp": 30.6,
+  "fit_ct_kwh": 11.6,
+  "year_mwh": 23.3,
+  "plant_factor": 0.772
+ },
+ "INV 01.01.004": {
+  "kwp": 24.48,
+  "fit_ct_kwh": 11.6,
+  "year_mwh": 14.8,
+  "plant_factor": 0.82
+ },
+ "INV 01.01.005": {
+  "kwp": 30.6,
+  "fit_ct_kwh": 11.6,
+  "year_mwh": 24.0,
+  "plant_factor": 0.789
+ }
+}
