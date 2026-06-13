@@ -168,7 +168,7 @@ citation block below the judge route line.
 |---|---|
 | `pipeline.py` | 5-inverter run: physics baseline → windows → classify → € (FiT) → tickets → orchestrator route → drafts → **RAG compliance note** → `out/*.json` |
 | `app.py` | FastAPI: `GET /api/inverters · timeseries · incidents · tickets · briefing · forecast` + `POST /api/decide`; audit → `out/audit.jsonl` |
-| `dashboard_draft.html` | **Primary UI** at `:8080/draft` — sidebar layout, 5 pages (see below) |
+| `dashboard.html` | **Primary UI** at `:8080/draft` — sidebar layout, 5 pages (see below) |
 | `index.html` | plain fallback UI at `:8080/` |
 | Chronos Lambda | `POST {"series":[...], "horizon":N}` → `quantiles {0.1,0.5,0.9}` |
 

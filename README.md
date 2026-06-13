@@ -113,7 +113,7 @@ Open **http://127.0.0.1:8080/draft** — the primary dashboard (Overview · Agen
 
 ```
 app.py                  FastAPI server + dashboard routes
-dashboard_draft.html    primary UI (Enerparc Pulse)
+dashboard.html          primary UI (Enerparc Pulse)
 agents/                 the 8 agents above
 pipelines/              data pipelines (main / 2018 validation / fault test / synthetic)
 eval/                   scoring (eval.py), PR chart gen, point-by-point fault-test runner

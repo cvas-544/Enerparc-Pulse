@@ -312,4 +312,4 @@ def index():
 
 @app.get("/draft", response_class=HTMLResponse)
 def draft():
-    return (HERE / "dashboard_draft.html").read_text()
+    return (HERE / "dashboard.html").read_text()
