@@ -14,8 +14,8 @@ __pycache__/
 venv/
 env/
 
-# ── runtime-generated ──
-out/audit.jsonl
+# ── generated artifacts (built by pipelines) ──
+out/
 
 # ── secrets ──
 .env

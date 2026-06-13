@@ -12,10 +12,10 @@ from pathlib import Path
 
 import pandas as pd
 
-HERE = Path(__file__).parent
-BASE = HERE.parent
-OUT  = HERE / "out"
-sys.path.insert(0, str(HERE))
+HERE = Path(__file__).parent          # eval/
+BASE = HERE.parent.parent             # dataset dir (raw_data/, "2. Additional Data/")
+OUT  = HERE.parent / "out"            # repo out/
+sys.path.insert(0, str(HERE.parent))  # repo root, so `agents` is importable
 
 from agents import ml_api, triage
 

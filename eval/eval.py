@@ -13,8 +13,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-HERE = Path(__file__).parent
-BASE = HERE.parent
+HERE = Path(__file__).parent       # eval/
+BASE = HERE.parent.parent          # dataset dir (raw_data/)
 KWP = 30.6  # synthetic scenarios are clones of INV 01.01.005
 
 syn = pd.read_csv(BASE / "raw_data/synthetic_eval.csv", parse_dates=["timestamp"])

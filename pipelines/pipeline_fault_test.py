@@ -20,16 +20,18 @@ Out: out/fault_test_incidents.json  out/fault_test_scores.json
 """
 
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-HERE = Path(__file__).parent
-BASE = HERE.parent
-OUT  = HERE / "out"
+HERE = Path(__file__).parent          # pipelines/
+BASE = HERE.parent.parent             # dataset dir (raw_data/, "2. Additional Data/")
+OUT  = HERE.parent / "out"            # repo out/
 OUT.mkdir(exist_ok=True)
 
+sys.path.insert(0, str(HERE.parent))  # repo root, so `agents` is importable
 from agents import drafter, impact, ml_api, orchestrator, rag_compliance, triage
 
 FIT          = 0.116   # EUR/kWh

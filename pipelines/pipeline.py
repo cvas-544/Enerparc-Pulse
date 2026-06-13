@@ -7,15 +7,17 @@ Run: python pipeline.py  ->  out/incidents.json, out/timeseries.json, out/meta.j
 """
 
 import json
+import sys
 from pathlib import Path
 
 import pandas as pd
 
+HERE = Path(__file__).parent          # pipelines/
+sys.path.insert(0, str(HERE.parent))  # repo root, so `agents` is importable
 from agents import drafter, impact, ml_api, orchestrator, rag_compliance, triage
 
-HERE = Path(__file__).parent
-BASE = HERE.parent
-OUT = HERE / "out"
+BASE = HERE.parent.parent             # dataset dir (raw_data/, "2. Additional Data/")
+OUT = HERE.parent / "out"             # repo out/
 OUT.mkdir(exist_ok=True)
 
 INVS = [f"INV 01.01.00{i}" for i in range(1, 6)]
