@@ -132,3 +132,13 @@ assets/demo.gif         walkthrough recording
 - **LLM features** (Compliance Chat, judge reasoning) call an Anthropic-backed helper and **degrade gracefully to deterministic mock/static text** when no key/module is present — the committed `out/*.json` already contain baked compliance notes, so the demo is fully offline-safe.
 - The cos φ = 0.95 reactive-power recommendation is a domain rule, not from the dataset; the forecast price narrative has no live price feed behind it.
 - **Hard rule:** every outbound action stops at the approval queue (EU AI Act advisory posture).
+
+---
+
+## Team
+
+Built by **Nico Junkers · Pavan Kumar · Rebecca Riedmayer · Vasu Chukka** at Energy Hack Munich 2026.
+
+**Vasu Chukka**
+📬 chukka.vasu@outlook.com
+💻 https://www.linkedin.com/in/vasu-chukka-1a3569116/
