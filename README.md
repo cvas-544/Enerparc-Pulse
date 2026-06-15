@@ -10,6 +10,14 @@ Built for the **Energy Hack Munich 2026** (Enerparc Open Track).
 
 ---
 
+## Architecture
+
+![Enerparc Pulse System Architecture](assets/architecture.png)
+
+> Full interactive diagram: [FigJam board](https://www.figma.com/board/Q1kWJFCyBzTyvxLqnjrg0z/beyondWatt-%C3%97-Enerparc-%E2%80%94-System-Architecture)
+
+---
+
 ## About
 
 Utility-scale solar O&M teams drown in raw SCADA. A 65-inverter plant throws thousands of signals a day, and the hard part isn't *seeing* a dip; it's knowing **why**. Is an inverter genuinely faulty, or was it curtailed by the grid operator (which pays compensation, not a truck roll)? Misreading that one distinction wastes field crews on non-faults while real defects (string failures, soiling, AC-side degradation) quietly bleed revenue for weeks. And every response has to respect a thick layer of EU/DE regulation (EEG §15, Redispatch 2.0, §14a, IEC 61724, NIS2, EU AI Act).
