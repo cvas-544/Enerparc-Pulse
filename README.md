@@ -105,19 +105,20 @@ The chart (Overview page → *Performance Ratio*) plots measured vs predicted PR
 
 ```bash
 pip install -r requirements.txt
-
-# 1) build the dashboard artifacts (writes to out/, which is git-ignored)
-python pipelines/pipeline.py          # 5-inverter run → out/incidents.json, timeseries.json, ...
-python pipelines/pipeline_2018.py     # 2018 validation → out/pr_validation.json (the PR chart)
-python pipelines/pipeline_fault_test.py   # synthetic fault-injection eval
-
-# 2) serve (from repo root)
-uvicorn app.app:app --port 8080
+uvicorn app.app:app --port 8080          # from repo root
 ```
 
 Open **http://127.0.0.1:8080/draft** — the primary dashboard (Overview · Agents · Compliance Chat · Tickets · Approval Queue).
 
-> `out/` holds generated artifacts and is **not committed**. Run the pipelines above first (they need the original Enerparc datasets placed locally — see Honesty notes). The recorded walkthrough above shows the dashboard fully populated.
+**It works out of the box.** The committed SCADA sample (`data/raw_data/inverters_first5_2023.csv`) and the pre-built artifacts in `out/*.json` are all the dashboard needs — no dataset setup required.
+
+To **regenerate** those artifacts from scratch (optional — needs the full Enerparc datasets placed locally):
+
+```bash
+python pipelines/pipeline.py          # 5-inverter run → out/incidents.json, timeseries.json, ...
+python pipelines/pipeline_2018.py     # 2018 validation → out/pr_validation.json (the PR chart)
+python pipelines/pipeline_fault_test.py   # synthetic fault-injection eval
+```
 
 ### API
 
@@ -132,10 +133,10 @@ app/                    FastAPI server (app.py) + primary UI (dashboard.html)
 agents/                 the 8 agents above
 pipelines/              data pipelines (main / 2018 validation / fault test / synthetic)
 eval/                   scoring (eval.py), PR chart gen, point-by-point fault-test runner
-data/                   small organizer reference files (System_Overview, FiT, Tickets .xlsx)
+data/                   committed SCADA sample (raw_data/) + organizer xlsx (System_Overview, FiT, Tickets)
 docs/                   Enerparc-task (system design) · agent · regulations-eu-de · demo-scenarios
 assets/demo.gif         walkthrough recording
-out/                    generated artifacts (git-ignored; built by pipelines/)
+out/                    pre-built artifacts the dashboard serves (committed; runtime audit log git-ignored)
 ```
 
 ---
@@ -143,7 +144,7 @@ out/                    generated artifacts (git-ignored; built by pipelines/)
 ## Honesty notes
 
 - **EUR figures are estimates** (physics/ML baseline, not certified meter) — "estimated revenue impact".
-- **Raw datasets and `out/` are not committed** (organizer files are 100s of MB; `out/` is generated — see `.gitignore`). Run the pipelines to build `out/*.json`; that needs the original Enerparc datasets placed locally.
+- **A 12 MB SCADA sample + the dashboard's `out/*.json` are committed** so the demo runs standalone. The **full** organizer datasets (100s of MB — full-year/65-inverter files, validation sets) are git-ignored; you only need them to *regenerate* artifacts via the pipelines.
 - **Runtime paths** in `pipelines/*.py` / `/api/tickets` assume the original hackathon folder layout for raw data + `2. Additional Data/`.
 - **LLM features** (Compliance Chat, judge reasoning) call an Anthropic-backed helper and **degrade gracefully to deterministic mock/static text** when no key/module is present — so the pipelines and dashboard run offline-safe.
 - The cos φ = 0.95 reactive-power recommendation is a domain rule, not from the dataset; the forecast price narrative has no live price feed behind it.

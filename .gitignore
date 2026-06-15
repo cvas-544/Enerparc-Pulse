@@ -1,11 +1,13 @@
 # ── large datasets — not committed (use organizer datasets locally) ──
-raw_data/
+# (the small committed SCADA sample lives in data/raw_data/ and is kept)
+/raw_data/
 *.large.csv
 main_monitoring_data.csv
 main_2017.csv
 validation_2018.csv
 raw_validation_2018.csv
 synthetic_eval.csv
+fault_test_dataset*.csv
 
 # ── python ──
 __pycache__/
@@ -14,8 +16,8 @@ __pycache__/
 venv/
 env/
 
-# ── generated artifacts (built by pipelines) ──
-out/
+# ── generated artifacts: commit the JSON/txt the dashboard serves, ignore runtime log ──
+out/audit.jsonl
 
 # ── secrets ──
 .env

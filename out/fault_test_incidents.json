@@ -1,0 +1,274 @@
+[
+ {
+  "start": "2017-10-19",
+  "end": "2017-10-22",
+  "days": 4,
+  "classification": "fault",
+  "subtype": "string_fault",
+  "reasoning": "DC current stepped down abruptly with voltage stable \u2014 one or more strings out (Strangausfall). Bring string fuses/connectors.",
+  "pr_inverter": 0.187,
+  "pr_fleet": 0.847,
+  "lost_kwh": 103.3,
+  "eur_impact": 11.98,
+  "severity": "low",
+  "inverter": "INV 01.01.002",
+  "route": {
+   "route": "dispatch",
+   "confidence": 0.85,
+   "note": "Step signature is clear \u2014 bring string fuses.",
+   "by": "rules-direct"
+  },
+  "draft": "WORK ORDER (dispatch)\nInverter: INV 01.01.002 (30.6 kWp) | 2017-10-19 \u2013 2017-10-22 (4 d) | string_fault\nPR 0.187 vs fleet 0.847. DC current stepped down abruptly with voltage stable \u2014 one or more strings out (Strangausfall). Bring string fuses/connectors.\nBurning: EUR 3/day (EUR 11.98 so far @ 11.6 ct/kWh). Step signature is clear \u2014 bring string fuses.\nBring string fuses + MC4 connectors.",
+  "similar_tickets": [],
+  "compliance_note": "**Applicable Regulation & Compliance Requirement:**\nUnder IEC 61724-1:2021, the string fault on INV 01.01.002 triggering a 4-day dispatch event requires formal performance investigation if the Performance Ratio (PR) sustained below 0.70 over this period; the operator must document PR calculations with temperature correction (PR_T = PR / (1 + \u03b3\u00d7(T_cell \u2212 25))) and state measurement uncertainty in the investigation report. Additionally, if this inverter fault caused plant outage exceeding 1 MW for more than 1 hour, NIS2 Directive & KRITIS-DachG oblige Important Entities (\u2265200 employees or \u2265EUR 10M energy-sector turnover) to report the incident to BSI within 24 hours (early warning) and 72 hours (full report); beyondWatt audit logs must capture this event with the MaStR unit ID per BNetz",
+  "id": "INV 01.01.002-ft-0",
+  "status": "pending",
+  "truth_types": [
+   "total_outage"
+  ],
+  "correct": false,
+  "priority": 2
+ },
+ {
+  "start": "2017-10-30",
+  "end": "2017-10-30",
+  "days": 1,
+  "classification": "weather",
+  "subtype": "plant_wide",
+  "reasoning": "All inverters collapsed together \u2014 plant-level event (grid, trafo or snow), not this machine.",
+  "pr_inverter": 0.005,
+  "pr_fleet": 0.851,
+  "lost_kwh": 16.1,
+  "eur_impact": 1.87,
+  "severity": "low",
+  "inverter": "INV 01.01.002",
+  "route": {
+   "route": "log",
+   "confidence": 0.9,
+   "note": "Plant-level event \u2014 record for compliance, not an inverter dispatch.",
+   "by": "rules-direct"
+  },
+  "draft": "COMPLIANCE LOG (no action)\nInverter: INV 01.01.002 | 2017-10-30 \u2013 2017-10-30 | plant_wide\nPR 0.005 vs fleet 0.851. All inverters collapsed together \u2014 plant-level event (grid, trafo or snow), not this machine.\nRecorded for availability/BNetzA reporting. Plant-level event \u2014 record for compliance, not an inverter dispatch.",
+  "similar_tickets": [],
+  "compliance_note": "**Applicable Regulations & Compliance Obligations:**\n\nUnder **Redispatch 2.0 (\u00a713/\u00a714 EnWG, BNetzA Festlegung REGENT)** and the **NIS2 Directive / German KRITIS-DachG**, this plant-wide inverter incident must be logged in beyondWatt with redispatch event details (start/end timestamp, requested set-point, actual output, signal origin) and, if outage exceeds 1 MW for >1 hour, reported to BSI within 24 hours (early warning) and 72 hours (full report). The operator must also file an outage report to **BNetzA MaStR** within 30 days if downtime exceeds 72 hours, including the MaStR unit ID and Betriebsstatus. Non-compliance carries fines up to EUR 100,000 (Redispatch 2.0), EUR 10",
+  "id": "INV 01.01.002-ft-1",
+  "status": "pending",
+  "truth_types": [
+   "total_outage"
+  ],
+  "correct": false,
+  "priority": 5
+ },
+ {
+  "start": "2017-11-03",
+  "end": "2017-11-04",
+  "days": 2,
+  "classification": "weather",
+  "subtype": "plant_wide",
+  "reasoning": "All inverters collapsed together \u2014 plant-level event (grid, trafo or snow), not this machine.",
+  "pr_inverter": 0.027,
+  "pr_fleet": 0.847,
+  "lost_kwh": 40.0,
+  "eur_impact": 4.64,
+  "severity": "low",
+  "inverter": "INV 01.01.002",
+  "route": {
+   "route": "log",
+   "confidence": 0.9,
+   "note": "Plant-level event \u2014 record for compliance, not an inverter dispatch.",
+   "by": "rules-direct"
+  },
+  "draft": "COMPLIANCE LOG (no action)\nInverter: INV 01.01.002 | 2017-11-03 \u2013 2017-11-04 | plant_wide\nPR 0.027 vs fleet 0.847. All inverters collapsed together \u2014 plant-level event (grid, trafo or snow), not this machine.\nRecorded for availability/BNetzA reporting. Plant-level event \u2014 record for compliance, not an inverter dispatch.",
+  "similar_tickets": [],
+  "compliance_note": "**Applicable Regulation:** NIS2 Directive (EU 2022/2555) & German KRITIS-DachG \u00a7 reporting obligations, read together with Redispatch 2.0 (\u00a713/\u00a714 EnWG) logging requirements and BNetzA MaStR reporting for outages exceeding 72 hours.\n\n**Operator MUST do:** If inverter INV 01.01.002 caused plant-wide shutdown exceeding 1 MW for more than 1 hour, log the incident immediately in beyondWatt (including timestamps, set-point compliance data, and MaStR unit ID) and notify BSI within 24 hours (early warning) with a full report within 72 hours; additionally, if the outage exceeded 72 hours, file the outage report to BNetzA MaStR within 30 days of restoration with the required data fields (MaStR-Einheit-Nr, Bet",
+  "id": "INV 01.01.002-ft-2",
+  "status": "pending",
+  "truth_types": [
+   "total_outage",
+   "curtailment"
+  ],
+  "correct": false,
+  "priority": 3
+ },
+ {
+  "start": "2017-12-01",
+  "end": "2017-12-01",
+  "days": 1,
+  "classification": "curtailment",
+  "subtype": "curtailment",
+  "reasoning": "DV/EVU setpoint below 100 % during the deficit \u2014 externally commanded, not an equipment fault. No truck roll; file compensation claim.",
+  "pr_inverter": 0.326,
+  "pr_fleet": 0.838,
+  "lost_kwh": 27.5,
+  "eur_impact": 3.19,
+  "severity": "low",
+  "inverter": "INV 01.01.002",
+  "route": {
+   "route": "claim",
+   "confidence": 0.95,
+   "note": "DV/EVU signal is direct evidence \u2014 recover the money, no truck.",
+   "by": "rules-direct"
+  },
+  "draft": "EEG COMPENSATION CLAIM (draft)\nInverter: INV 01.01.002 | 2017-12-01 \u2013 2017-12-01\nPR 0.326 vs fleet 0.838. DV/EVU setpoint below 100 % during the deficit \u2014 externally commanded, not an equipment fault. No truck roll; file compensation claim.\nRecoverable: 28 kWh @ 11.6 ct/kWh = EUR 3.19\nAction: file \u00a715 EEG compensation with grid operator. DV/EVU signal is direct evidence \u2014 recover the money, no truck.",
+  "similar_tickets": [],
+  "compliance_note": "**Applicable Regulation:** EEG 2023 \u00a715 (Entsch\u00e4digung bei Abregelung) read with Redispatch 2.0 (\u00a713/\u00a714 EnWG).\n\n**Required Actions:** The operator must file a curtailment compensation claim with the responsible grid operator (Netzbetreiber) **within 12 months** of the curtailment event, submitting documented evidence: (a) curtailment signal timestamps from the grid operator (DV/EVU signal < 100%), (b) irradiation data proving producible energy, and (c) inverter INV 01.01.002 output data before and during the 1-day curtailment period. Compensation will be calculated at **95% of lost revenue** (production shortfall \u00d7 applicable feed-in tariff for EEG plants, or market value for Redispatch 2.0 participation).\n\n**Financial/Legal Consequence:** Failure to file",
+  "id": "INV 01.01.002-ft-3",
+  "status": "pending",
+  "truth_types": [
+   "curtailment",
+   "total_outage"
+  ],
+  "correct": true,
+  "priority": 4
+ },
+ {
+  "start": "2017-10-12",
+  "end": "2017-10-17",
+  "days": 6,
+  "classification": "fault",
+  "subtype": "string_fault",
+  "reasoning": "DC current stepped down abruptly with voltage stable \u2014 one or more strings out (Strangausfall). Bring string fuses/connectors.",
+  "pr_inverter": 0.125,
+  "pr_fleet": 0.477,
+  "lost_kwh": 184.3,
+  "eur_impact": 21.38,
+  "severity": "low",
+  "inverter": "INV 01.01.004",
+  "route": {
+   "route": "dispatch",
+   "confidence": 0.85,
+   "note": "Step signature is clear \u2014 bring string fuses.",
+   "by": "rules-direct"
+  },
+  "draft": "WORK ORDER (dispatch)\nInverter: INV 01.01.004 (30.92 kWp) | 2017-10-12 \u2013 2017-10-17 (6 d) | string_fault\nPR 0.125 vs fleet 0.477. DC current stepped down abruptly with voltage stable \u2014 one or more strings out (Strangausfall). Bring string fuses/connectors.\nBurning: EUR 4/day (EUR 21.38 so far @ 11.6 ct/kWh). Step signature is clear \u2014 bring string fuses.\nBring string fuses + MC4 connectors.",
+  "similar_tickets": [],
+  "compliance_note": "**Applicable Regulation & Required Actions:**\n\nUnder the **BNetzA MaStR reporting obligation** (Marktstammdatenregister), because the string_fault on INV 01.01.004 resulted in a 6-day dispatch outage, the operator must report this incident to BNetzA **within 30 days of restoration** if the downtime exceeds 72 hours; the work order must log the plant's **MaStR unit ID and current operating status (Betriebsstatus)**, and the facility must document the outage duration and EUR 21 impact loss. Additionally, if the operator meets **NIS2/KRITIS-DachG threshold criteria** (\u2265200 employees or \u2265EUR 10M turnover in energy sector), this 6-day outage must also be assessed against the significant-incident threshold (>1 MW loss for >1 hour); if exceeded, **early warning notification to BSI is due within",
+  "id": "INV 01.01.004-ft-0",
+  "status": "pending",
+  "truth_types": [
+   "soiling"
+  ],
+  "correct": false,
+  "priority": 1
+ },
+ {
+  "start": "2017-12-01",
+  "end": "2017-12-01",
+  "days": 1,
+  "classification": "curtailment",
+  "subtype": "curtailment",
+  "reasoning": "DV/EVU setpoint below 100 % during the deficit \u2014 externally commanded, not an equipment fault. No truck roll; file compensation claim.",
+  "pr_inverter": 0.044,
+  "pr_fleet": 0.163,
+  "lost_kwh": 3.8,
+  "eur_impact": 0.44,
+  "severity": "low",
+  "inverter": "INV 01.01.004",
+  "route": {
+   "route": "claim",
+   "confidence": 0.95,
+   "note": "DV/EVU signal is direct evidence \u2014 recover the money, no truck.",
+   "by": "rules-direct"
+  },
+  "draft": "EEG COMPENSATION CLAIM (draft)\nInverter: INV 01.01.004 | 2017-12-01 \u2013 2017-12-01\nPR 0.044 vs fleet 0.163. DV/EVU setpoint below 100 % during the deficit \u2014 externally commanded, not an equipment fault. No truck roll; file compensation claim.\nRecoverable: 4 kWh @ 11.6 ct/kWh = EUR 0.44\nAction: file \u00a715 EEG compensation with grid operator. DV/EVU signal is direct evidence \u2014 recover the money, no truck.",
+  "similar_tickets": [],
+  "compliance_note": "# Compliance Advisory\n\nUnder **EEG 2023 \u00a715 (Entsch\u00e4digung bei Abregelung)** and **Redispatch 2.0 (\u00a713/\u00a714 EnWG)**, the operator must file a curtailment compensation claim with the responsible grid operator (Netzbetreiber) within **12 months** of the incident, supported by documented evidence: curtailment signal timestamps, irradiation data confirming producible energy, and inverter output logs (before/during curtailment). The claim must specify whether compensation is sought under the 95%-revenue rule (EEG \u00a715) or market-value basis (Redispatch 2.0), as the applicable tariff differs. Failure to file within 12 months forfeits the claim entirely; non-compliance with signal participation or logging requirements may result in **BNetzA fines up to EUR 100,000** and potential suspension of EEG payments under MaSt",
+  "id": "INV 01.01.004-ft-1",
+  "status": "pending",
+  "truth_types": [
+   "curtailment"
+  ],
+  "correct": true,
+  "priority": 9
+ },
+ {
+  "start": "2017-12-01",
+  "end": "2017-12-01",
+  "days": 1,
+  "classification": "curtailment",
+  "subtype": "curtailment",
+  "reasoning": "DV/EVU setpoint below 100 % during the deficit \u2014 externally commanded, not an equipment fault. No truck roll; file compensation claim.",
+  "pr_inverter": 0.22,
+  "pr_fleet": 0.594,
+  "lost_kwh": 11.9,
+  "eur_impact": 1.38,
+  "severity": "low",
+  "inverter": "INV 01.01.005",
+  "route": {
+   "route": "claim",
+   "confidence": 0.95,
+   "note": "DV/EVU signal is direct evidence \u2014 recover the money, no truck.",
+   "by": "rules-direct"
+  },
+  "draft": "EEG COMPENSATION CLAIM (draft)\nInverter: INV 01.01.005 | 2017-12-01 \u2013 2017-12-01\nPR 0.22 vs fleet 0.594. DV/EVU setpoint below 100 % during the deficit \u2014 externally commanded, not an equipment fault. No truck roll; file compensation claim.\nRecoverable: 12 kWh @ 11.6 ct/kWh = EUR 1.38\nAction: file \u00a715 EEG compensation with grid operator. DV/EVU signal is direct evidence \u2014 recover the money, no truck.",
+  "similar_tickets": [],
+  "compliance_note": "**Applicable Regulation:** EEG 2023 \u00a715 (Entsch\u00e4digung bei Abregelung) applies to this curtailment incident, with ancillary requirements under Redispatch 2.0 (\u00a713/\u00a714 EnWG) and BNetzA MaStR reporting obligations.\n\n**Operator Must Do:** The operator must file a curtailment compensation claim with the responsible grid operator (Netzbetreiber) within **12 months** of the curtailment event, documenting: (a) curtailment signal timestamps from the grid operator or EVU, (b) irradiation and producible energy data, and (c) inverter output (INV 01.01.005) before and during curtailment. Simultaneously, every redispatch event must be logged in beyondWatt with start/end timestamp, set-point, actual output, and signal origin; the MaStR unit ID must be recorded on the fault log",
+  "id": "INV 01.01.005-ft-0",
+  "status": "pending",
+  "truth_types": [
+   "curtailment"
+  ],
+  "correct": true,
+  "priority": 8
+ },
+ {
+  "start": "2017-12-01",
+  "end": "2017-12-01",
+  "days": 1,
+  "classification": "curtailment",
+  "subtype": "curtailment",
+  "reasoning": "DV/EVU setpoint below 100 % during the deficit \u2014 externally commanded, not an equipment fault. No truck roll; file compensation claim.",
+  "pr_inverter": 0.463,
+  "pr_fleet": 0.882,
+  "lost_kwh": 13.6,
+  "eur_impact": 1.58,
+  "severity": "low",
+  "inverter": "INV 01.01.001",
+  "route": {
+   "route": "claim",
+   "confidence": 0.95,
+   "note": "DV/EVU signal is direct evidence \u2014 recover the money, no truck.",
+   "by": "rules-direct"
+  },
+  "draft": "EEG COMPENSATION CLAIM (draft)\nInverter: INV 01.01.001 | 2017-12-01 \u2013 2017-12-01\nPR 0.463 vs fleet 0.882. DV/EVU setpoint below 100 % during the deficit \u2014 externally commanded, not an equipment fault. No truck roll; file compensation claim.\nRecoverable: 14 kWh @ 11.6 ct/kWh = EUR 1.58\nAction: file \u00a715 EEG compensation with grid operator. DV/EVU signal is direct evidence \u2014 recover the money, no truck.",
+  "similar_tickets": [],
+  "compliance_note": "**Applicable Regulation:** EEG 2023 \u00a715 (Entsch\u00e4digung bei Abregelung) and Redispatch 2.0 (\u00a713/\u00a714 EnWG).\n\n**Required Actions:** The operator must document the curtailment event with (a) exact timestamps of the grid operator's curtailment signal, (b) irradiation data and inverter output records before and during curtailment, and (c) file a compensation claim with the responsible grid operator (Netzbetreiber) within **12 months** of the incident. Under Redispatch 2.0, beyondWatt must log the start/end timestamp, requested set-point, actual output, and signal origin in the fault record.\n\n**Consequences of Inaction:** Failure to file within 12 months forfeits the curtailment compensation claim entirely. Non-compliance with redispatch logging and signal response requirements exposes the operator to BNetzA fines",
+  "id": "INV 01.01.001-ft-1",
+  "status": "pending",
+  "truth_types": [
+   "curtailment"
+  ],
+  "correct": true,
+  "priority": 7
+ },
+ {
+  "start": "2017-12-01",
+  "end": "2017-12-01",
+  "days": 1,
+  "classification": "curtailment",
+  "subtype": "curtailment",
+  "reasoning": "DV/EVU setpoint below 100 % during the deficit \u2014 externally commanded, not an equipment fault. No truck roll; file compensation claim.",
+  "pr_inverter": 0.071,
+  "pr_fleet": 0.572,
+  "lost_kwh": 15.9,
+  "eur_impact": 1.84,
+  "severity": "low",
+  "inverter": "INV 01.01.003",
+  "route": {
+   "route": "claim",
+   "confidence": 0.95,
+   "note": "DV/EVU signal is direct evidence \u2014 recover the money, no truck.",
+   "by": "rules-direct"
+  },
+  "draft": "EEG COMPENSATION CLAIM (draft)\nInverter: INV 01.01.003 | 2017-12-01 \u2013 2017-12-01\nPR 0.071 vs fleet 0.572. DV/EVU setpoint below 100 % during the deficit \u2014 externally commanded, not an equipment fault. No truck roll; file compensation claim.\nRecoverable: 16 kWh @ 11.6 ct/kWh = EUR 1.84\nAction: file \u00a715 EEG compensation with grid operator. DV/EVU signal is direct evidence \u2014 recover the money, no truck.",
+  "similar_tickets": [],
+  "compliance_note": "**Applicable Regulation:** EEG 2023 \u00a715 (Entsch\u00e4digung bei Abregelung) and Redispatch 2.0 (\u00a713/\u00a714 EnWG).\n\n**Required Actions:** The operator must immediately document the curtailment event by recording (a) the exact timestamps of the grid operator's set-point signal and inverter response, (b) irradiation and producible energy data for the 1-day curtailment period, and (c) inverter output readings before, during, and after curtailment. A formal compensation claim must be filed with the responsible Netzbetreiber within 12 months; the claim shall reference the grid operator's signal origin (SMGW or direct RTU) and cite the Marktwert (market-value) compensation due under Redispatch 2.0, not the feed-in tariff. The operator should also ensure the MaStR unit ID is logged in the fault record for",
+  "id": "INV 01.01.003-ft-0",
+  "status": "pending",
+  "truth_types": [
+   "curtailment"
+  ],
+  "correct": true,
+  "priority": 6
+ }
+]

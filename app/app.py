@@ -17,9 +17,14 @@ from fastapi.responses import HTMLResponse
 
 HERE = Path(__file__).parent          # app/
 ROOT = HERE.parent                    # repo root (agents/, out/)
-DATA = ROOT.parent                    # dataset dir (raw_data/, "2. Additional Data/")
+DATA = ROOT.parent                    # original layout dataset dir (raw_data/, "2. Additional Data/")
 sys.path.insert(0, str(ROOT))         # so `from agents import ...` resolves
 OUT = ROOT / "out"
+
+# SCADA dataset: prefer the committed copy in the repo, fall back to original layout
+SCADA_CSV = ROOT / "data/raw_data/inverters_first5_2023.csv"
+if not SCADA_CSV.exists():
+    SCADA_CSV = DATA / "raw_data/inverters_first5_2023.csv"
 CHRONOS_URL = "https://3juzm47gye.execute-api.eu-north-1.amazonaws.com/"
 INVS = [f"INV 01.01.00{i}" for i in range(1, 6)]
 
@@ -28,7 +33,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"],
                    allow_headers=["*"])
 
 # hourly P_AC per inverter for the live forecast panel (3 clear July days)
-_df = pd.read_csv(DATA / "raw_data/inverters_first5_2023.csv",
+_df = pd.read_csv(SCADA_CSV,
                   sep=";", decimal=",", parse_dates=["timestamp"],
                   date_format="%Y.%m.%d %H:%M")
 _df = _df.groupby("timestamp").mean(numeric_only=True)
