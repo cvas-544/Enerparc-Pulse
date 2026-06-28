@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Enerparc Pulse — O&M Command Crew</title>
+<title>beyondWatt — O&M Command Crew</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -434,7 +434,7 @@ h2,h3 { font-family:'Space Grotesk',sans-serif; }
 <nav class="sidebar">
   <div class="sidebar-logo">
     <div class="wordmark">
-      Enerparc Pulse
+      beyondWatt
     </div>
     <div class="sub">O&M Command Crew</div>
   </div>
@@ -934,7 +934,7 @@ h2,h3 { font-family:'Space Grotesk',sans-serif; }
     <div class="chat-wrap">
       <div class="chat-messages" id="chat-msgs">
         <div class="chat-msg bot">
-          <div class="chat-sender">Enerparc Pulse RAG</div>
+          <div class="chat-sender">beyondWatt RAG</div>
           <div class="chat-bubble">
             Hi. I can answer compliance questions grounded in the regulations we monitor: EEG §15 curtailment compensation, BNetzA MaStR reporting obligations, IEC 61724-1 performance ratio definitions, Redispatch 2.0, §14a EnWG dimming rules, and the EU AI Act advisory-only posture.<br><br>
             Ask me anything — e.g. <em>"When does a curtailment event become an EEG §15 claim?"</em> or <em>"What triggers a NIS2 incident report?"</em>
@@ -1751,7 +1751,7 @@ function renderQueueDetail(i) {
         </div>
         <div style="font-size:11px;color:var(--dim2)">
           📍 ${i.location||'Bavaria, Germany'} &nbsp;·&nbsp;
-          Reporter: ${i.reporter||'Enerparc Pulse SCADA Monitor'}
+          Reporter: ${i.reporter||'beyondWatt SCADA Monitor'}
         </div>
       </div>
       <div style="text-align:right;flex-shrink:0">
@@ -1997,31 +1997,31 @@ async function loadPRValidation() {
 // ── chat ─────────────────────────────────────────────────────
 const COMPLIANCE_KB = [
   { keys:["hi","hello","hey","hallo","guten","good morning","morning","start","what can","help","topics"],
-    ans:"Hello! I'm the Enerparc Pulse compliance assistant — grounded in the regulations we monitor.<br><br>Ask me about: <b>EEG §15</b> curtailment compensation · <b>Redispatch 2.0</b> · <b>§14a EnWG</b> storage dimming · <b>MaStR</b> reporting · <b>NIS2</b> incident notification · <b>EU AI Act</b> advisory posture · <b>IEC 61724</b> performance ratio · <b>string faults</b> · <b>soiling</b> · <b>forecasting</b>." },
+    ans:"Hello! I'm the beyondWatt compliance assistant — grounded in the regulations we monitor.<br><br>Ask me about: <b>EEG §15</b> curtailment compensation · <b>Redispatch 2.0</b> · <b>§14a EnWG</b> storage dimming · <b>MaStR</b> reporting · <b>NIS2</b> incident notification · <b>EU AI Act</b> advisory posture · <b>IEC 61724</b> performance ratio · <b>string faults</b> · <b>soiling</b> · <b>forecasting</b>." },
   { keys:["§15","eeg 15","eeg§15","eeg claim","curtailment claim","compensation","entschädigung","einspeisevergütung","how do i claim","when to file","file a claim"],
-    ans:"Under EEG 2023 §15, grid operators must compensate renewable operators for curtailed energy at <b>95% of lost FiT revenue</b>.<br><br>Required documentation:<br>• DV/EVU timestamps (start + end of curtailment)<br>• Irradiation data confirming producible energy<br>• Inverter output before/during/after curtailment<br><br>File within <b>12 months</b> with the Netzbetreiber. Enerparc Pulse routes curtailment events to 'claim' and drafts the letter automatically." },
+    ans:"Under EEG 2023 §15, grid operators must compensate renewable operators for curtailed energy at <b>95% of lost FiT revenue</b>.<br><br>Required documentation:<br>• DV/EVU timestamps (start + end of curtailment)<br>• Irradiation data confirming producible energy<br>• Inverter output before/during/after curtailment<br><br>File within <b>12 months</b> with the Netzbetreiber. beyondWatt routes curtailment events to 'claim' and drafts the letter automatically." },
   { keys:["curtailment","abregelung","dv signal","evu signal","grid setpoint","grid limit","feed-in limit","what is curtailment"],
-    ans:"Curtailment shows as <b>DV or EVU signal &lt; 100%</b> in SCADA. This is <b>not an equipment fault</b> — must be classified separately.<br><br>Enerparc Pulse detects it at Stage 2 triage when DV/EVU &lt; 100% and PR drop matches the setpoint ratio. Route: <b>claim</b> → EEG §15 compensation letter drafted automatically." },
+    ans:"Curtailment shows as <b>DV or EVU signal &lt; 100%</b> in SCADA. This is <b>not an equipment fault</b> — must be classified separately.<br><br>beyondWatt detects it at Stage 2 triage when DV/EVU &lt; 100% and PR drop matches the setpoint ratio. Route: <b>claim</b> → EEG §15 compensation letter drafted automatically." },
   { keys:["redispatch","§13","§14 enwg","regent","market value","marktwert","redispatch 2.0"],
     ans:"Redispatch 2.0 (§13/§14 EnWG, BNetzA REGENT): Plants ≥ 100 kW must participate.<br><br>• Compensation = <b>market value</b> (Marktwert) of curtailed energy, not the FiT rate<br>• Log every event: start/end timestamp, requested set-point, actual output<br>• Non-compliance: up to <b>€100,000 fine</b><br><br>Different from EEG §15 — use the Marktwert formula for Redispatch claims." },
   { keys:["§14a","14a","storage","speicher","dimming","smgw","smart meter gateway","controllable"],
-    ans:"§14a EnWG applies to controllable storage and heat pumps. Grid operator may dim charging to max <b>4.2 kW</b>. Operator receives a <b>reduced grid fee</b> in return.<br><br>Enerparc Pulse classifies §14a dimming separately from §13 Redispatch — they arrive via different SMGW command codes. Never merge these in fault logs." },
+    ans:"§14a EnWG applies to controllable storage and heat pumps. Grid operator may dim charging to max <b>4.2 kW</b>. Operator receives a <b>reduced grid fee</b> in return.<br><br>beyondWatt classifies §14a dimming separately from §13 Redispatch — they arrive via different SMGW command codes. Never merge these in fault logs." },
   { keys:["mastr","marktstammdaten","annual yield","outage report","meldepflicht","register"],
     ans:"BNetzA MaStR reporting obligations:<br>① Annual yield → within <b>90 days</b> of year-end<br>② Outages &gt; 72h → within <b>30 days</b> of restoration<br>③ Decommissioning → within <b>4 weeks</b><br><br>Always include the MaStR unit ID on all fault logs and compensation claims." },
   { keys:["nis2","nis 2","cybersecurity","bsi","incident notification","kritisch","kritis","important entity"],
-    ans:"NIS2 (EU 2022/2555): Energy operators ≥ 200 employees or ≥ €10M turnover = <b>Important Entities</b>.<br><br>Obligations:<br>• BSI <b>early warning within 24h</b> for significant incidents (&gt; 1 MW for &gt; 1h)<br>• Full incident report within <b>72h</b><br><br>Enerparc Pulse timestamps all anomalies for this purpose. Every incident log is audit-ready." },
+    ans:"NIS2 (EU 2022/2555): Energy operators ≥ 200 employees or ≥ €10M turnover = <b>Important Entities</b>.<br><br>Obligations:<br>• BSI <b>early warning within 24h</b> for significant incidents (&gt; 1 MW for &gt; 1h)<br>• Full incident report within <b>72h</b><br><br>beyondWatt timestamps all anomalies for this purpose. Every incident log is audit-ready." },
   { keys:["eu ai act","ai act","high risk","hochrisiko","human oversight","advisory only","approval gate","human gate"],
-    ans:"EU AI Act Art.6 / Annex III: AI systems in critical infrastructure energy management are <b>HIGH-RISK</b> without human oversight.<br><br>Enerparc Pulse stays advisory-only — every action draft requires human approval before execution. Per incident we log:<br>• Model ID + version<br>• Confidence score<br>• Human decision (approved/rejected)<br>• Timestamp<br><br>This keeps us out of high-risk classification." },
+    ans:"EU AI Act Art.6 / Annex III: AI systems in critical infrastructure energy management are <b>HIGH-RISK</b> without human oversight.<br><br>beyondWatt stays advisory-only — every action draft requires human approval before execution. Per incident we log:<br>• Model ID + version<br>• Confidence score<br>• Human decision (approved/rejected)<br>• Timestamp<br><br>This keeps us out of high-risk classification." },
   { keys:["performance ratio","what is pr","pr formula","iec 61724","leistungsverhältnis","ipr","how is pr calculated"],
-    ans:"IEC 61724-1:2021 definition:<br><b>PR = E_AC / (H_poa / G_STC × P_nom)</b><br><br>• Sustained PR &lt; 0.70 for &gt; 3 days → formal investigation required<br>• Temperature correction: PR_T = PR / (1 + γ × (T_cell − 25°C)), γ ≈ −0.004/°C for mono-Si<br><br>Enerparc Pulse uses a <b>LightGBM ML model</b> to predict the healthy-state PR reference, replacing the fleet-median heuristic." },
+    ans:"IEC 61724-1:2021 definition:<br><b>PR = E_AC / (H_poa / G_STC × P_nom)</b><br><br>• Sustained PR &lt; 0.70 for &gt; 3 days → formal investigation required<br>• Temperature correction: PR_T = PR / (1 + γ × (T_cell − 25°C)), γ ≈ −0.004/°C for mono-Si<br><br>beyondWatt uses a <b>LightGBM ML model</b> to predict the healthy-state PR reference, replacing the fleet-median heuristic." },
   { keys:["string fault","string","strang","i_dc","dc current","step drop","module failure"],
-    ans:"String faults show as a <b>step-drop in I_DC</b> while U_DC stays at nominal — this distinguishes string loss from total inverter failure (where U_DC collapses to 0).<br><br>Enerparc Pulse Stage 2 triage detects this via: I_DC drop &gt; 15% + U_DC normal → <b>route: dispatch</b> (truck roll + work order generated)." },
+    ans:"String faults show as a <b>step-drop in I_DC</b> while U_DC stays at nominal — this distinguishes string loss from total inverter failure (where U_DC collapses to 0).<br><br>beyondWatt Stage 2 triage detects this via: I_DC drop &gt; 15% + U_DC normal → <b>route: dispatch</b> (truck roll + work order generated)." },
   { keys:["soiling","verschmutzung","dirt","dust","snow","schnee","gradual","drift"],
-    ans:"Soiling = gradual PR drift without current step-changes. Distinguished from string faults by the <b>smooth degradation curve</b> vs. abrupt step-down.<br><br>Snow = PR drops to near-zero with low irradiance, recovers as irradiance rises — classified as weather, not a fault. Enerparc Pulse routes soiling to <b>scheduled maintenance</b>, not emergency dispatch." },
+    ans:"Soiling = gradual PR drift without current step-changes. Distinguished from string faults by the <b>smooth degradation curve</b> vs. abrupt step-down.<br><br>Snow = PR drops to near-zero with low irradiance, recovers as irradiance rises — classified as weather, not a fault. beyondWatt routes soiling to <b>scheduled maintenance</b>, not emergency dispatch." },
   { keys:["forecast","prognose","chronos","24h","battery","speicher","tomorrow","predict","energy tomorrow"],
-    ans:"Enerparc Pulse uses <b>Chronos-Bolt</b> (Amazon, deployed AWS Lambda eu-north-1) for 24h probabilistic forecasting with P10/P50/P90 uncertainty bands.<br><br>Battery strategy: charge in cheap midday window, discharge at evening peak — only when the price spread exceeds degradation cost. The forecast is live at the top of the Overview page." },
+    ans:"beyondWatt uses <b>Chronos-Bolt</b> (Amazon, deployed AWS Lambda eu-north-1) for 24h probabilistic forecasting with P10/P50/P90 uncertainty bands.<br><br>Battery strategy: charge in cheap midday window, discharge at evening peak — only when the price spread exceeds degradation cost. The forecast is live at the top of the Overview page." },
   { keys:["solarspitzengesetz","solar peak law","§7a","feed-in limit","new regulation 2024"],
-    ans:"Solarspitzengesetz (Bundestag 2024): New plants ≥ 25 kWp must install certified ripple-control receivers (Rundsteuerempfänger) for grid operator feed-in control. Existing EEG plants under §14a retrofit requirements apply from 2026. Enerparc Pulse tracks DV/EVU compliance per inverter." },
+    ans:"Solarspitzengesetz (Bundestag 2024): New plants ≥ 25 kWp must install certified ripple-control receivers (Rundsteuerempfänger) for grid operator feed-in control. Existing EEG plants under §14a retrofit requirements apply from 2026. beyondWatt tracks DV/EVU compliance per inverter." },
 ];
 
 // active ticket the chat is grounded on (null = general compliance mode)
@@ -2042,7 +2042,7 @@ function restoreChat() {
       msgs.appendChild(u);
     } else {
       const b = el('div','chat-msg bot');
-      b.innerHTML = `<div class="chat-sender">Enerparc Pulse RAG</div><div class="chat-bubble">${fmtAnswer(m.content)}</div>`;
+      b.innerHTML = `<div class="chat-sender">beyondWatt RAG</div><div class="chat-bubble">${fmtAnswer(m.content)}</div>`;
       msgs.appendChild(b);
     }
   });
@@ -2097,7 +2097,7 @@ async function chatSend() {
 
   // typing indicator
   const typing = el('div','chat-msg bot');
-  typing.innerHTML = `<div class="chat-sender">Enerparc Pulse RAG</div><div class="chat-bubble" style="color:var(--dim2)">…</div>`;
+  typing.innerHTML = `<div class="chat-sender">beyondWatt RAG</div><div class="chat-bubble" style="color:var(--dim2)">…</div>`;
   msgs.appendChild(typing);
   msgs.scrollTop = msgs.scrollHeight;
 

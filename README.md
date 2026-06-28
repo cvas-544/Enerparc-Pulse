@@ -1,4 +1,4 @@
-# Enerparc Pulse
+# beyondWatt
 
 **AI-powered O&M command crew for utility-scale solar.** SCADA telemetry → ML performance-ratio baseline → multi-stage fault detection → EUR impact pricing → LLM-as-judge routing → human-approved action drafts, grounded in EU/DE energy regulation.
 
@@ -6,13 +6,13 @@ Built for the **Energy Hack Munich 2026** (Enerparc Open Track).
 
 > ⚖️ **Advisory only: never autonomous control.** Every outbound action stops at a human-approval gate. This is a deliberate design choice to stay out of EU AI Act high-risk classification.
 
-![Enerparc Pulse demo](assets/demo.gif)
+![beyondWatt demo](assets/demo.gif)
 
 ---
 
 ## Architecture
 
-![Enerparc Pulse System Architecture](assets/architecture.png)
+![beyondWatt System Architecture](assets/architecture.png)
 
 > Full interactive diagram: [FigJam board](https://www.figma.com/board/Q1kWJFCyBzTyvxLqnjrg0z/beyondWatt-%C3%97-Enerparc-%E2%80%94-System-Architecture)
 
@@ -22,7 +22,7 @@ Built for the **Energy Hack Munich 2026** (Enerparc Open Track).
 
 Utility-scale solar O&M teams drown in raw SCADA. A 65-inverter plant throws thousands of signals a day, and the hard part isn't *seeing* a dip; it's knowing **why**. Is an inverter genuinely faulty, or was it curtailed by the grid operator (which pays compensation, not a truck roll)? Misreading that one distinction wastes field crews on non-faults while real defects (string failures, soiling, AC-side degradation) quietly bleed revenue for weeks. And every response has to respect a thick layer of EU/DE regulation (EEG §15, Redispatch 2.0, §14a, IEC 61724, NIS2, EU AI Act).
 
-**Enerparc Pulse turns that firehose into a ranked queue of decisions a human can approve in one click.** We solve it in five moves:
+**beyondWatt turns that firehose into a ranked queue of decisions a human can approve in one click.** We solve it in five moves:
 
 1. **Learn "healthy."** An ML model predicts the Performance Ratio an inverter *should* hit for the current weather, the honest baseline, not a crude fleet average.
 2. **Flag only what's real.** A PR cascade (IEC 61724) screens against that baseline with persistence + deviation filters, killing weather noise and one-off sensor blips.
@@ -36,7 +36,7 @@ The payoff: faster triage, fewer wasted truck rolls, recovered curtailment compe
 
 ## What it does
 
-Enerparc Pulse watches a fleet of PV inverters and turns raw SCADA into *decisions a human can approve in one click*:
+beyondWatt watches a fleet of PV inverters and turns raw SCADA into *decisions a human can approve in one click*:
 
 1. **Predicts the healthy-state Performance Ratio (PR)** with a LightGBM model, the baseline an inverter *should* hit given weather + time.
 2. **Detects deviations** with a PR cascade (IEC 61724 pattern), then drills down to root cause.
